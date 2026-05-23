@@ -65,13 +65,20 @@ async def download_resource(
     if HAS_TQDM:
         results = await atqdm.gather(*tasks, desc=f"  {resource}", leave=False)
     else:
-        done = 0
-        results = []
-        for coro in asyncio.as_completed(tasks):
-            results.append(await coro)
-            done += 1
-            if done % 50 == 0 or done == len(tasks):
-                print(f"    {done}/{len(tasks)}", end="\r")
+        # gather preserva el orden de envío (necesario para zip(pending, results))
+        # el contador de progreso se actualiza dentro de cada tarea envuelta
+        completed = 0
+        total_tasks = len(tasks)
+
+        async def tracked(coro):
+            nonlocal completed
+            result = await coro
+            completed += 1
+            if completed % 50 == 0 or completed == total_tasks:
+                print(f"    {completed}/{total_tasks}", end="\r")
+            return result
+
+        results = await asyncio.gather(*[tracked(t) for t in tasks])
         print()
 
     saved = 0
