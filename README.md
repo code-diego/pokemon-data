@@ -17,12 +17,15 @@ pokemon-data/
 ├── docs/
 │   └── MONGO_GUIDE.md    # Guía de instalación y uso de MongoDB desde cero
 ├── requirements.txt      # Dependencias del proyecto
-└── data/                 # Caché JSON descargada (ignorada por git)
-    ├── pokemon/          # 1,350 archivos — datos individuales por Pokémon
-    ├── species/          # 1,025 archivos — especie, generación, color, hábitat
-    ├── types/            #    21 archivos — relaciones de daño entre tipos
-    ├── abilities/        #   371 archivos — efectos de habilidades
-    └── moves/            #   937 archivos — poder, precisión, PP, clase de daño
+└── data/                 # Archivos generados e ignorados por git
+    ├── raw/              # Caché JSON descargada por fetch.py
+    │   ├── pokemon/      # 1,350 archivos — datos individuales por Pokémon
+    │   ├── species/      # 1,025 archivos — especie, generación, color, hábitat
+    │   ├── types/        #    21 archivos — relaciones de daño entre tipos
+    │   ├── abilities/    #   371 archivos — efectos de habilidades
+    │   └── moves/        #   937 archivos — poder, precisión, PP, clase de daño
+    ├── pokemon.db        # Base de datos SQLite (build_db.py)
+    └── pokemon_docs.json # Respaldo JSON para MongoDB (build_nosql.py)
 ```
 
 > Los archivos `data/pokemon.db` y `data/pokemon_docs.json` son **generados** y están en `.gitignore`.
@@ -57,7 +60,7 @@ Durante la descarga muestra el directorio exacto donde se guarda cada recurso:
 ```
 Descargando datos…
   pokemon: 1350 por descargar (0 ya en caché)…
-  → guardado en: /home/usuario/pokemon-data/data/pokemon  (1350 archivos nuevos)
+  → guardado en: /home/usuario/pokemon-data/data/raw/pokemon  (1350 archivos nuevos)
   ...
 ```
 

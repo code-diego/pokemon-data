@@ -1,5 +1,5 @@
 """
-Descarga todos los datos de PokéAPI y los guarda como JSON en data/.
+Descarga todos los datos de PokéAPI y los guarda como JSON en data/raw/.
 Uso: python scripts/fetch.py
 Idempotente: salta archivos que ya existen.
 """
@@ -13,7 +13,7 @@ from pathlib import Path
 import aiohttp
 
 BASE_URL = "https://pokeapi.co/api/v2"
-DATA_DIR = Path(__file__).parent.parent / "data"
+DATA_DIR = Path(__file__).parent.parent / "data" / "raw"
 SEMAPHORE_LIMIT = 40
 
 try:

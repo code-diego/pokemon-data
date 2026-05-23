@@ -1,5 +1,5 @@
 """
-Lee la caché JSON de data/ y produce:
+Lee la caché JSON de data/raw/ y produce:
   1. data/pokemon_docs.json  — respaldo JSON local
   2. MongoDB pokemon_data.pokemon  — documentos desnormalizados listos para consultas
 
@@ -18,8 +18,8 @@ try:
 except ImportError:
     HAS_MONGO = False
 
-DATA_DIR  = Path(__file__).parent.parent / "data"
-OUT_FILE  = DATA_DIR / "pokemon_docs.json"
+RAW_DIR  = Path(__file__).parent.parent / "data" / "raw"
+OUT_FILE = Path(__file__).parent.parent / "data" / "pokemon_docs.json"
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 MONGO_DB  = "pokemon_data"
 MONGO_COL = "pokemon"
@@ -32,7 +32,7 @@ MONGO_COL = "pokemon"
 def load_abilities_index() -> dict[str, str | None]:
     """name → effect (EN)"""
     index = {}
-    for path in (DATA_DIR / "abilities").glob("*.json"):
+    for path in (RAW_DIR / "abilities").glob("*.json"):
         try:
             d = json.loads(path.read_text(encoding="utf-8"))
         except Exception:
@@ -49,7 +49,7 @@ def load_abilities_index() -> dict[str, str | None]:
 def load_moves_index() -> dict[str, dict]:
     """name → {power, accuracy, pp, type, damage_class}"""
     index = {}
-    for path in (DATA_DIR / "moves").glob("*.json"):
+    for path in (RAW_DIR / "moves").glob("*.json"):
         try:
             d = json.loads(path.read_text(encoding="utf-8"))
         except Exception:
@@ -67,7 +67,7 @@ def load_moves_index() -> dict[str, dict]:
 def load_species_index() -> dict[str, dict]:
     """name → species fields"""
     index = {}
-    for path in (DATA_DIR / "species").glob("*.json"):
+    for path in (RAW_DIR / "species").glob("*.json"):
         try:
             d = json.loads(path.read_text(encoding="utf-8"))
         except Exception:
@@ -97,7 +97,7 @@ def load_species_index() -> dict[str, dict]:
 def load_types_index() -> dict[str, dict]:
     """name → damage_relations"""
     index = {}
-    for path in (DATA_DIR / "types").glob("*.json"):
+    for path in (RAW_DIR / "types").glob("*.json"):
         try:
             d = json.loads(path.read_text(encoding="utf-8"))
         except Exception:
@@ -126,7 +126,7 @@ def build_documents(
 ) -> list[dict]:
     docs = []
 
-    for path in sorted((DATA_DIR / "pokemon").glob("*.json")):
+    for path in sorted((RAW_DIR / "pokemon").glob("*.json")):
         try:
             d = json.loads(path.read_text(encoding="utf-8"))
         except Exception:
@@ -206,8 +206,8 @@ def build_documents(
 # ---------------------------------------------------------------------------
 
 def main():
-    if not (DATA_DIR / "pokemon").exists():
-        print("No se encontró data/pokemon/. Ejecuta fetch.py primero.")
+    if not (RAW_DIR / "pokemon").exists():
+        print("No se encontró data/raw/pokemon/. Ejecuta fetch.py primero.")
         return
 
     print("Cargando índices…")

@@ -1,5 +1,5 @@
 """
-Lee la caché JSON de data/ y construye pokemon.db (SQLite).
+Lee la caché JSON de data/raw/ y construye data/pokemon.db (SQLite).
 Uso: python scripts/build_db.py
 Requiere haber ejecutado scripts/fetch.py primero.
 """
@@ -8,8 +8,8 @@ import json
 import sqlite3
 from pathlib import Path
 
-DATA_DIR = Path(__file__).parent.parent / "data"
-DB_PATH = Path(__file__).parent.parent / "data" / "pokemon.db"
+DATA_DIR = Path(__file__).parent.parent / "data" / "raw"
+DB_PATH  = Path(__file__).parent.parent / "data" / "pokemon.db"
 
 
 # ---------------------------------------------------------------------------
@@ -104,7 +104,7 @@ CREATE TABLE IF NOT EXISTS pokemon_moves (
 def load_pokemon(conn: sqlite3.Connection) -> int:
     poke_dir = DATA_DIR / "pokemon"
     if not poke_dir.exists():
-        print("  [AVISO] Carpeta data/pokemon no encontrada. Ejecuta fetch.py primero.")
+        print("  [AVISO] Carpeta data/raw/pokemon no encontrada. Ejecuta fetch.py primero.")
         return 0
 
     rows_poke, rows_stats, rows_types, rows_abilities, rows_moves = [], [], [], [], []
