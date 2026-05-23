@@ -1,15 +1,15 @@
 """
 Lee la caché JSON de data/ y construye pokemon.db (SQLite).
-Uso: python build_db.py
-Requiere haber ejecutado fetch.py primero.
+Uso: python scripts/build_db.py
+Requiere haber ejecutado scripts/fetch.py primero.
 """
 
 import json
 import sqlite3
 from pathlib import Path
 
-DATA_DIR = Path(__file__).parent / "data"
-DB_PATH = Path(__file__).parent / "pokemon.db"
+DATA_DIR = Path(__file__).parent.parent / "data"
+DB_PATH = Path(__file__).parent.parent / "data" / "pokemon.db"
 
 
 # ---------------------------------------------------------------------------
@@ -268,6 +268,8 @@ def load_moves(conn: sqlite3.Connection) -> int:
 # ---------------------------------------------------------------------------
 
 def main():
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+
     if DB_PATH.exists():
         DB_PATH.unlink()
 

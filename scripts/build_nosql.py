@@ -3,7 +3,7 @@ Lee la caché JSON de data/ y produce:
   1. data/pokemon_docs.json  — respaldo JSON local
   2. MongoDB pokemon_data.pokemon  — documentos desnormalizados listos para consultas
 
-Requiere haber ejecutado fetch.py primero.
+Requiere haber ejecutado scripts/fetch.py primero.
 Requiere pymongo: pip install pymongo
 """
 
@@ -18,7 +18,7 @@ try:
 except ImportError:
     HAS_MONGO = False
 
-DATA_DIR  = Path(__file__).parent / "data"
+DATA_DIR  = Path(__file__).parent.parent / "data"
 OUT_FILE  = DATA_DIR / "pokemon_docs.json"
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 MONGO_DB  = "pokemon_data"
@@ -252,7 +252,7 @@ def load_to_mongo(docs: list[dict]) -> None:
         client.admin.command("ping")
     except Exception as exc:
         print(f"[ERROR] No se pudo conectar a MongoDB: {exc}")
-        print("        Verifica que mongod esté corriendo. Consulta MONGO_GUIDE.md")
+        print("        Verifica que mongod esté corriendo. Consulta docs/MONGO_GUIDE.md")
         return
 
     col = client[MONGO_DB][MONGO_COL]

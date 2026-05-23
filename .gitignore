@@ -1,7 +1,5 @@
 # Datos descargados y archivos generados
 data/
-*.db
-pokemon_docs.json
 
 # Python
 __pycache__/

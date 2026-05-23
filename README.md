@@ -7,22 +7,25 @@ una base de datos **SQLite** relacional y una colección **MongoDB** con documen
 
 ```
 pokemon-data/
-├── fetch.py          # Descarga datos de PokéAPI → data/
-├── build_db.py       # Construye pokemon.db (SQLite, 9 tablas relacionadas)
-├── build_nosql.py    # Construye documentos desnormalizados → data/pokemon_docs.json + MongoDB
-├── relational.ipynb  # Notebook de análisis sobre SQLite
-├── nosql.ipynb       # Notebook de consultas sobre MongoDB
-├── requirements.txt  # Dependencias del proyecto
-├── MONGO_GUIDE.md    # Guía de instalación y uso de MongoDB desde cero
-└── data/             # Caché JSON descargada (ignorada por git)
-    ├── pokemon/      # 1,350 archivos — datos individuales por Pokémon
-    ├── species/      # 1,025 archivos — especie, generación, color, hábitat
-    ├── types/        #    21 archivos — relaciones de daño entre tipos
-    ├── abilities/    #   371 archivos — efectos de habilidades
-    └── moves/        #   937 archivos — poder, precisión, PP, clase de daño
+├── scripts/
+│   ├── fetch.py          # Descarga datos de PokéAPI → data/
+│   ├── build_db.py       # Construye pokemon.db (SQLite, 9 tablas relacionadas)
+│   └── build_nosql.py    # Construye documentos → data/pokemon_docs.json + MongoDB
+├── notebooks/
+│   ├── relational.ipynb  # Análisis sobre SQLite
+│   └── nosql.ipynb       # Consultas sobre MongoDB
+├── docs/
+│   └── MONGO_GUIDE.md    # Guía de instalación y uso de MongoDB desde cero
+├── requirements.txt      # Dependencias del proyecto
+└── data/                 # Caché JSON descargada (ignorada por git)
+    ├── pokemon/          # 1,350 archivos — datos individuales por Pokémon
+    ├── species/          # 1,025 archivos — especie, generación, color, hábitat
+    ├── types/            #    21 archivos — relaciones de daño entre tipos
+    ├── abilities/        #   371 archivos — efectos de habilidades
+    └── moves/            #   937 archivos — poder, precisión, PP, clase de daño
 ```
 
-> Los archivos `pokemon.db` y `data/pokemon_docs.json` son **generados** y están en `.gitignore`.
+> Los archivos `data/pokemon.db` y `data/pokemon_docs.json` son **generados** y están en `.gitignore`.
 > Ejecútalos localmente con los scripts de build.
 
 ## Requisitos
@@ -45,7 +48,7 @@ pip install -r requirements.txt
 ### 1. Descargar datos
 
 ```bash
-python fetch.py
+python scripts/fetch.py
 ```
 
 Descarga pokémon, especies, tipos, habilidades y movimientos de PokéAPI.
@@ -63,10 +66,10 @@ Es **idempotente**: si un archivo JSON ya existe lo salta, puedes reanudar desca
 ### 2a. Base de datos SQLite (relacional)
 
 ```bash
-python build_db.py
+python scripts/build_db.py
 ```
 
-Genera `pokemon.db` con 9 tablas relacionadas:
+Genera `data/pokemon.db` con 9 tablas relacionadas:
 
 | Tabla               | Contenido |
 |---------------------|-----------|
@@ -83,7 +86,7 @@ Genera `pokemon.db` con 9 tablas relacionadas:
 ### 2b. Colección MongoDB (no relacional)
 
 ```bash
-python build_nosql.py
+python scripts/build_nosql.py
 ```
 
 Genera dos salidas:
@@ -95,13 +98,13 @@ Cada documento tiene un Pokémon completo con tipos, stats, habilidades, especie
 El script es **idempotente**: si lo vuelves a correr actualiza los documentos existentes sin duplicar.
 
 > Si MongoDB no está corriendo el script avisa y genera el JSON de todas formas.
-> Consulta **MONGO_GUIDE.md** para instalarlo en Fedora.
+> Consulta **docs/MONGO_GUIDE.md** para instalarlo en Fedora.
 
 ### 3. Analizar
 
 ```bash
-jupyter notebook relational.ipynb   # análisis sobre SQLite
-jupyter notebook nosql.ipynb        # consultas sobre MongoDB
+jupyter notebook notebooks/relational.ipynb   # análisis sobre SQLite
+jupyter notebook notebooks/nosql.ipynb        # consultas sobre MongoDB
 ```
 
 #### `relational.ipynb` — 10 secciones
@@ -145,7 +148,7 @@ jupyter notebook nosql.ipynb        # consultas sobre MongoDB
 Si MongoDB no corre en `localhost:27017`:
 
 ```bash
-MONGO_URI="mongodb://mi-servidor:27017" python build_nosql.py
+MONGO_URI="mongodb://mi-servidor:27017" python scripts/build_nosql.py
 ```
 
 ## Posibles mejoras
@@ -154,5 +157,5 @@ MONGO_URI="mongodb://mi-servidor:27017" python build_nosql.py
 - **Texto en español** — efectos y descripciones se guardan solo en inglés; añadir multilenguaje.
 - **Actualización incremental** — `build_db.py` reconstruye la BD completa; se puede hacer incremental.
 - **Dashboard interactivo** — complementar los notebooks con Streamlit o Plotly Dash.
-- **Docker Compose** — levantar MongoDB en contenedor sin instalación local (ver `MONGO_GUIDE.md`).
+- **Docker Compose** — levantar MongoDB en contenedor sin instalación local (ver `docs/MONGO_GUIDE.md`).
 - **Tests** — pruebas unitarias para los loaders con una muestra pequeña de JSON fijos.
