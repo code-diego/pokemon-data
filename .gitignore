@@ -1,5 +1,19 @@
-*.db
+# Datos crudos y base de datos generados
 data/
+*.db
+
+# Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+
+# Jupyter
 .ipynb_checkpoints/
+
+# Entorno
+.env
+*.env
