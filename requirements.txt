@@ -1,0 +1,11 @@
+# Descarga de datos
+aiohttp>=3.9
+tqdm>=4.66        # opcional — barra de progreso en fetch.py
+
+# Análisis y visualización
+pandas>=2.0
+matplotlib>=3.8
+numpy>=1.26
+
+# MongoDB
+pymongo>=4.6

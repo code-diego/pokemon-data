@@ -1,6 +1,7 @@
-# Datos crudos y base de datos generados
+# Datos descargados y archivos generados
 data/
 *.db
+pokemon_docs.json
 
 # Python
 __pycache__/
@@ -17,3 +18,8 @@ env/
 # Entorno
 .env
 *.env
+
+# MongoDB
+mongod.lock
+/mongodb-data/
+/mongo-data/

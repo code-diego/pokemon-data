@@ -82,6 +82,7 @@ async def download_resource(
             )
             saved += 1
 
+    print(f"  → guardado en: {out_dir.resolve()}  ({saved} archivos nuevos)")
     return saved + skipped
 
 
