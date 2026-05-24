@@ -146,7 +146,7 @@ jupyter notebook notebooks/relational.ipynb   # análisis sobre SQLite
 jupyter notebook notebooks/nosql.ipynb        # consultas sobre MongoDB
 ```
 
-#### `relational.ipynb` — 11 secciones
+#### `relational.ipynb` — 9 secciones (gráficas con Plotly — hover, zoom)
 
 | # | Contenido |
 |---|-----------|
@@ -157,10 +157,8 @@ jupyter notebook notebooks/nosql.ipynb        # consultas sobre MongoDB
 | 4 | Stats base (BST) por tipo y generación |
 | 5 | Legendarios, míticos y normales |
 | 6 | Efectividad de tipos (matriz 18×18) |
-| 7 | Combinaciones de tipos |
+| 7 | Combinaciones de tipos (matriz asimétrica — primario × secundario) |
 | 8 | Consultas SQL personalizadas |
-| 9 | Visor de Pokémon — ficha individual |
-| 10 | Gráficas interactivas con Plotly (hover, zoom) |
 
 #### `nosql.ipynb` — 7 secciones
 
