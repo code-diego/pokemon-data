@@ -37,14 +37,16 @@ pokemon-data/
 pip install -r requirements.txt
 ```
 
-| Paquete      | Uso |
-|--------------|-----|
-| `aiohttp`    | Descargas asíncronas en `fetch.py` |
-| `tqdm`       | Barra de progreso (opcional) |
-| `pandas`     | Análisis de datos en los notebooks |
-| `matplotlib` | Visualizaciones |
-| `numpy`      | Cálculos numéricos |
-| `pymongo`    | Conexión con MongoDB |
+| Paquete       | Uso |
+|---------------|-----|
+| `aiohttp`     | Descargas asíncronas en `fetch.py` |
+| `tqdm`        | Barra de progreso (opcional) |
+| `pandas`      | Análisis de datos en los notebooks |
+| `matplotlib`  | Visualizaciones estáticas |
+| `numpy`       | Cálculos numéricos |
+| `pymongo`     | Conexión con MongoDB |
+| `plotly`      | Gráficas interactivas (sección 10 de `relational.ipynb` y dashboard) |
+| `streamlit`   | Dashboard maqueta (`dashboard/app.py`) |
 
 ## Inicio rápido (todo el pipeline en orden)
 
@@ -65,6 +67,9 @@ python scripts/build_nosql.py
 # 3. Analizar
 jupyter notebook notebooks/relational.ipynb   # SQLite
 jupyter notebook notebooks/nosql.ipynb        # MongoDB
+
+# 4. Dashboard interactivo (opcional)
+streamlit run dashboard/app.py
 ```
 
 > **Orden de dependencias:** `fetch.py` debe correr **antes** que los `build_*`
@@ -141,12 +146,12 @@ jupyter notebook notebooks/relational.ipynb   # análisis sobre SQLite
 jupyter notebook notebooks/nosql.ipynb        # consultas sobre MongoDB
 ```
 
-#### `relational.ipynb` — 10 secciones
+#### `relational.ipynb` — 11 secciones
 
 | # | Contenido |
 |---|-----------|
 | 0 | Explorador de tablas — esquema, filas, columnas, nulos, distribuciones |
-| 1 | Vista general del dataset |
+| 1 | Vista general del dataset (1 025 formas base — excluye 325 formas alt.) |
 | 2 | Distribución de tipos primarios |
 | 3 | Peso y altura |
 | 4 | Stats base (BST) por tipo y generación |
@@ -155,6 +160,7 @@ jupyter notebook notebooks/nosql.ipynb        # consultas sobre MongoDB
 | 7 | Combinaciones de tipos |
 | 8 | Consultas SQL personalizadas |
 | 9 | Visor de Pokémon — ficha individual |
+| 10 | Gráficas interactivas con Plotly (hover, zoom) |
 
 #### `nosql.ipynb` — 7 secciones
 
@@ -185,11 +191,21 @@ Si MongoDB no corre en `localhost:27017`:
 MONGO_URI="mongodb://mi-servidor:27017" python scripts/build_nosql.py
 ```
 
+## Dashboard interactivo (maqueta)
+
+Explora los datos con filtros en vivo sin reejecutar celdas:
+
+```bash
+streamlit run dashboard/app.py
+```
+
+Se abre en `http://localhost:8501`. Filtra por generación, tipo, categoría y toggle
+para incluir/excluir formas alternativas. Muestra KPIs, tres gráficas Plotly y una tabla.
+
 ## Posibles mejoras
 
 - **Evoluciones** — añadir `evolution-chain` de PokéAPI para analizar cadenas evolutivas.
 - **Texto en español** — efectos y descripciones se guardan solo en inglés; añadir multilenguaje.
 - **Actualización incremental** — `build_db.py` reconstruye la BD completa; se puede hacer incremental.
-- **Dashboard interactivo** — complementar los notebooks con Streamlit o Plotly Dash.
 - **Docker Compose** — levantar MongoDB en contenedor sin instalación local (ver `docs/MONGO_GUIDE.md`).
 - **Tests** — pruebas unitarias para los loaders con una muestra pequeña de JSON fijos.
