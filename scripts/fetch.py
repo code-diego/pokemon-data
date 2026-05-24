@@ -1,7 +1,7 @@
 """
 Descarga todos los datos de PokéAPI y los guarda como JSON en data/raw/.
-Uso: python scripts/fetch.py
-Idempotente: salta archivos que ya existen.
+> python3 scripts/fetch.py
+* salta archivos que ya existen
 """
 
 import asyncio

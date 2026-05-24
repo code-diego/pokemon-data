@@ -3,8 +3,8 @@ Lee la caché JSON de data/raw/ y produce:
   1. data/pokemon_docs.json  — respaldo JSON local
   2. MongoDB pokemon_data.pokemon  — documentos desnormalizados listos para consultas
 
-Requiere haber ejecutado scripts/fetch.py primero.
-Requiere pymongo: pip install pymongo
+* requiere haber ejecutado scripts/fetch.py primero.
+* Requiere pymongo: pip install pymongo
 """
 
 import json
