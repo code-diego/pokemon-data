@@ -1,6 +1,9 @@
 # Datos descargados y archivos generados
 data/
 
+# Carpeta personal de explicaciones (privada, no se versiona)
+explain/
+
 # Python
 __pycache__/
 *.pyc

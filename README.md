@@ -8,14 +8,14 @@ una base de datos **SQLite** relacional y una colección **MongoDB** con documen
 ```
 pokemon-data/
 ├── scripts/
-│   ├── fetch.py          # Descarga datos de PokéAPI → data/
+│   ├── fetch.py          # Descarga datos de PokéAPI → data/raw/
 │   ├── build_db.py       # Construye pokemon.db (SQLite, 9 tablas relacionadas)
 │   └── build_nosql.py    # Construye documentos → data/pokemon_docs.json + MongoDB
 ├── notebooks/
 │   ├── relational.ipynb  # Análisis sobre SQLite
 │   └── nosql.ipynb       # Consultas sobre MongoDB
 ├── docs/
-│   └── MONGO_GUIDE.md    # Guía de instalación y uso de MongoDB desde cero
+│   └── MONGO_GUIDE.md    # Guía de instalación de MongoDB (Linux/Fedora, Windows, macOS)
 ├── requirements.txt      # Dependencias del proyecto
 └── data/                 # Archivos generados e ignorados por git
     ├── raw/              # Caché JSON descargada por fetch.py
@@ -45,6 +45,33 @@ pip install -r requirements.txt
 | `matplotlib` | Visualizaciones |
 | `numpy`      | Cálculos numéricos |
 | `pymongo`    | Conexión con MongoDB |
+
+## Inicio rápido (todo el pipeline en orden)
+
+```bash
+# 0. Instalar dependencias
+pip install -r requirements.txt
+
+# 1. Descargar los datos de PokéAPI  →  data/raw/   (solo la primera vez, ~minutos)
+python scripts/fetch.py
+
+# 2a. Construir la base SQLite  →  data/pokemon.db
+python scripts/build_db.py
+
+# 2b. Construir la colección MongoDB  →  data/pokemon_docs.json + MongoDB
+podman start mongodb            # arranca MongoDB (ver docs/MONGO_GUIDE.md para instalarlo)
+python scripts/build_nosql.py
+
+# 3. Analizar
+jupyter notebook notebooks/relational.ipynb   # SQLite
+jupyter notebook notebooks/nosql.ipynb        # MongoDB
+```
+
+> **Orden de dependencias:** `fetch.py` debe correr **antes** que los `build_*`
+> (ellos leen de `data/raw/`). `build_db.py` y `build_nosql.py` son independientes entre sí:
+> puedes correr uno, el otro, o ambos. Los notebooks necesitan su backend ya construido.
+
+A continuación, cada paso en detalle.
 
 ## Uso
 
@@ -88,7 +115,10 @@ Genera `data/pokemon.db` con 9 tablas relacionadas:
 
 ### 2b. Colección MongoDB (no relacional)
 
+Primero asegúrate de que MongoDB esté corriendo, luego carga los datos:
+
 ```bash
+podman start mongodb        # arranca el contenedor (ver instalación en docs/MONGO_GUIDE.md)
 python scripts/build_nosql.py
 ```
 
@@ -101,7 +131,8 @@ Cada documento tiene un Pokémon completo con tipos, stats, habilidades, especie
 El script es **idempotente**: si lo vuelves a correr actualiza los documentos existentes sin duplicar.
 
 > Si MongoDB no está corriendo el script avisa y genera el JSON de todas formas.
-> Consulta **docs/MONGO_GUIDE.md** para instalarlo en Fedora.
+> **¿Aún no tienes MongoDB?** La instalación para Linux/Fedora, Windows y macOS está en
+> **[docs/MONGO_GUIDE.md](docs/MONGO_GUIDE.md)**.
 
 ### 3. Analizar
 
