@@ -6,7 +6,7 @@ Esta guía te lleva desde cero hasta tener MongoDB corriendo y los datos Pokémo
 
 ## ¿Qué es MongoDB y por qué usarlo aquí?
 
-| | SQLite (`pokemon.db`) | MongoDB (`pokemon_data`) |
+| | SQLite (`data/pokemon.db`) | MongoDB (`pokemon_data`) |
 |---|---|---|
 | Modelo | Tablas relacionadas (9 tablas) | Documentos JSON anidados |
 | Consultar un Pokémon | JOIN de 5+ tablas | Un solo `find()` |
@@ -18,24 +18,90 @@ Así puedes comparar el estilo SQL vs. el estilo documento.
 
 ---
 
-## 1. Instalar MongoDB en Fedora
+## 1. Instalar MongoDB — aviso importante (Fedora 44 / kernel 6.19+)
 
-MongoDB no está en los repositorios oficiales de Fedora, pero el repo de RHEL 9 funciona.
+> **MongoDB 8.0 no arranca en kernels 6.19 o superior** (incluyendo Fedora 44 con kernel 7.x).
+> Es un bug conocido de incompatibilidad con io_uring: [SERVER-121912](https://jira.mongodb.org/browse/SERVER-121912).
+> La solución correcta es correr MongoDB en un **contenedor Podman** con la versión 7.0.
 
-### Paso 1 — Agregar el repositorio
+Si tienes Fedora ≤ 43 (kernel < 6.19) y MongoDB 8.0 te funciona, puedes saltar al paso 2.
+De lo contrario, sigue la sección de Podman a continuación.
 
-Crea el archivo `/etc/yum.repos.d/mongodb-org-8.0.repo` con este contenido:
+---
 
-```ini
-[mongodb-org-8.0]
-name=MongoDB Repository
-baseurl=https://repo.mongodb.org/yum/redhat/9/mongodb-org/8.0/x86_64/
-gpgcheck=1
-enabled=1
-gpgkey=https://pgp.mongodb.com/server-8.0.asc
+## 2. Correr MongoDB con Podman (recomendado en Fedora 44+)
+
+Podman ya viene instalado en Fedora. No necesitas Docker ni permisos de root.
+
+### Paso 1 — Descargar la imagen
+
+```bash
+podman pull docker.io/mongo:7.0
 ```
 
-Puedes crearlo con:
+### Paso 2 — Iniciar el contenedor
+
+```bash
+podman run -d \
+  --name mongodb \
+  -p 27017:27017 \
+  -v mongodb_data:/data/db \
+  docker.io/mongo:7.0
+```
+
+- `-d` lo corre en segundo plano
+- `--name mongodb` le da un nombre fijo para manejarlo fácil
+- `-p 27017:27017` expone el puerto al host (el script lo conecta en `localhost:27017`)
+- `-v mongodb_data:/data/db` persiste los datos entre reinicios
+
+### Paso 3 — Verificar que funciona
+
+```bash
+mongosh --quiet --eval "db.runCommand({ping: 1})"
+```
+
+Deberías ver:
+
+```
+{ ok: 1 }
+```
+
+### Autoarranque al iniciar sesión
+
+Para que el contenedor inicie automáticamente cuando entres a tu sesión:
+
+```bash
+podman generate systemd --new --name mongodb > ~/.config/systemd/user/mongodb.service
+systemctl --user daemon-reload
+systemctl --user enable mongodb.service
+```
+
+### Comandos del día a día
+
+```bash
+# Ver si está corriendo
+podman ps
+
+# Iniciar (si está detenido)
+podman start mongodb
+
+# Detener
+podman stop mongodb
+
+# Reiniciar
+podman restart mongodb
+
+# Ver logs en tiempo real
+podman logs -f mongodb
+```
+
+---
+
+## 3. Instalar MongoDB directamente (solo si tu kernel < 6.19)
+
+Si tu kernel es anterior a 6.19 y prefieres la instalación nativa de Fedora:
+
+### Agregar el repositorio
 
 ```bash
 sudo tee /etc/yum.repos.d/mongodb-org-8.0.repo << 'EOF'
@@ -48,47 +114,13 @@ gpgkey=https://pgp.mongodb.com/server-8.0.asc
 EOF
 ```
 
-### Paso 2 — Instalar
+### Instalar y arrancar
 
 ```bash
 sudo dnf install -y mongodb-org
+sudo systemctl enable --now mongod
+sudo systemctl status mongod   # debe mostrar "active (running)"
 ```
-
----
-
-## 2. Iniciar, detener y verificar el servicio
-
-```bash
-# Iniciar MongoDB
-sudo systemctl start mongod
-
-# Que inicie automáticamente al arrancar la PC (opcional)
-sudo systemctl enable mongod
-
-# Ver si está corriendo
-sudo systemctl status mongod
-
-# Detener
-sudo systemctl stop mongod
-```
-
-Una salida como `Active: active (running)` confirma que está listo.
-
----
-
-## 3. Verificar que funciona
-
-```bash
-mongosh --eval "db.runCommand({ping: 1})"
-```
-
-Deberías ver:
-
-```
-{ ok: 1 }
-```
-
-Si ves ese `ok: 1`, MongoDB está listo para recibir datos.
 
 ---
 
@@ -112,10 +144,10 @@ Ejemplo de documento en este proyecto:
   "id": 25,
   "name": "pikachu",
   "types": [{"name": "electric", "slot": 1}],
-  "stats": {"hp": 35, "attack": 55, "speed": 90, ...},
+  "stats": {"hp": 35, "attack": 55, "speed": 90},
   "abilities": [{"name": "static", "is_hidden": false, "effect": "..."}],
-  "species": {"is_legendary": false, "generation": "generation-i", ...},
-  "moves": [{"name": "thunder-shock", "power": 40, ...}]
+  "species": {"is_legendary": false, "generation": "generation-i"},
+  "moves": [{"name": "thunder-shock", "power": 40}]
 }
 ```
 
@@ -125,16 +157,16 @@ Todo lo que en SQLite está en 5 tablas distintas, aquí está en un solo docume
 
 ## 5. Cargar los datos Pokémon
 
-Primero asegúrate de haber descargado los datos crudos:
+Primero descarga los datos crudos (si no lo has hecho):
 
 ```bash
-python fetch.py       # Descarga ~3,700 JSON de PokéAPI (solo la primera vez)
+python scripts/fetch.py       # Descarga ~3,700 JSON de PokéAPI (solo la primera vez)
 ```
 
-Luego carga a MongoDB:
+Luego carga a MongoDB (y genera `data/pokemon_docs.json`):
 
 ```bash
-python build_nosql.py
+python scripts/build_nosql.py
 ```
 
 Deberías ver algo como:
@@ -155,7 +187,7 @@ MongoDB → pokemon_data.pokemon
   Insertados: 1350  |  Actualizados: 0  |  Total: 1350
 ```
 
-El script es idempotente: si lo corres dos veces, la segunda vez dirá
+El script es idempotente: si lo corres dos veces, la segunda dirá
 `Insertados: 0 | Actualizados: 1350` (actualiza en lugar de duplicar).
 
 ---
@@ -206,8 +238,6 @@ exit
 Instala el driver:
 
 ```bash
-pip install pymongo
-# o con el requirements.txt del proyecto:
 pip install -r requirements.txt
 ```
 
@@ -230,38 +260,21 @@ print(f"{len(legendarios)} legendarios")
 client.close()
 ```
 
-Para queries más avanzadas con pandas y visualizaciones, abre `analysis.ipynb`
-y ve a la sección **"10. Consultas MongoDB"**.
+Para queries con pandas y visualizaciones, abre el notebook:
+
+```bash
+jupyter notebook notebooks/nosql.ipynb
+```
 
 ---
 
 ## 8. Cambiar la URL de conexión (MONGO_URI)
 
-Por defecto el proyecto conecta a `mongodb://localhost:27017`. Si necesitas cambiar esto
-(por ejemplo cuando agregues Docker más adelante), usa la variable de entorno:
+Por defecto el proyecto conecta a `mongodb://localhost:27017`. Si necesitas cambiar esto:
 
 ```bash
-# Linux/macOS
-export MONGO_URI="mongodb://localhost:27017"
-python build_nosql.py
-
-# O en una sola línea
-MONGO_URI="mongodb://mi-servidor:27017" python build_nosql.py
-```
-
----
-
-## 9. Próximos pasos — Docker
-
-Cuando quieras aprender Docker, el siguiente paso natural es crear un `docker-compose.yml`
-que levante MongoDB (y opcionalmente `mongo-express`, una UI web para ver los datos)
-sin necesidad de instalarlo en el sistema. El script `build_nosql.py` ya está preparado:
-solo cambia `MONGO_URI` y funcionará igual.
-
-```
-# En el futuro:
-docker compose up -d
-MONGO_URI="mongodb://localhost:27017" python build_nosql.py
+# Variable de entorno en una sola línea
+MONGO_URI="mongodb://mi-servidor:27017" python scripts/build_nosql.py
 ```
 
 ---
@@ -269,15 +282,19 @@ MONGO_URI="mongodb://localhost:27017" python build_nosql.py
 ## Resumen de comandos del día a día
 
 ```bash
-# 1. Iniciar MongoDB (si no está corriendo)
-sudo systemctl start mongod
+# 1. Verificar que MongoDB está corriendo
+podman ps | grep mongodb           # debe aparecer "Up"
+mongosh --quiet --eval "db.runCommand({ping:1})"  # debe responder { ok: 1 }
 
-# 2. Cargar / actualizar datos
-python build_nosql.py
+# 2. Iniciar si está detenido
+podman start mongodb
 
-# 3. Abrir notebook
-jupyter notebook analysis.ipynb
+# 3. Cargar / actualizar datos
+python scripts/build_nosql.py
 
-# 4. Explorar en consola
+# 4. Abrir notebook
+jupyter notebook notebooks/nosql.ipynb
+
+# 5. Explorar en consola
 mongosh
 ```
