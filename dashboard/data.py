@@ -81,12 +81,16 @@ def load_data() -> pd.DataFrame:
     """Carga y une todas las tablas. @st.cache_data evita releer en cada interacción."""
     db = find_db()
     if db is None:
+        _checked = [
+            str(_PROJECT_ROOT / "data" / "pokemon.db"),
+            str(_PROJECT_ROOT / "data" / "sample.db"),
+        ]
         st.error(
             "No se encontró ninguna base de datos. "
             "**Local:** ejecuta `python scripts/build_db.py`. "
-            "**Deploy:** asegúrate de que `data/sample.db` está commiteado en el repo "
-            "(genera con `python scripts/build_sample_db.py` y haz `git add data/sample.db`)."
+            "**Deploy:** asegúrate de que `data/sample.db` está commiteado en el repo."
         )
+        st.code("\n".join([f"Buscado en: {p}" for p in _checked]))
         st.stop()
 
     con = sqlite3.connect(db)
