@@ -17,6 +17,10 @@ from data import (
 
 st.set_page_config(page_title="Pokédex", layout="wide")
 st.title("Pokédex")
+st.caption(
+    "Ficha individual: stats, tipos, métricas de juego y tabla completa de debilidades y resistencias. "
+    "Busca por nombre en el selector o desplázate por el Pokédex."
+)
 
 df_all = load_data()
 df     = df_all[df_all["id"] < 10000].sort_values("id")

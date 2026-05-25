@@ -18,7 +18,10 @@ from data import (
 
 st.set_page_config(page_title="Comparador", layout="wide")
 st.title("Comparador de Pokémon")
-st.caption("Selecciona 2 a 6 Pokémon para comparar sus estadísticas base.")
+st.caption(
+    "Selecciona entre 2 y 6 Pokémon para ver sus estadísticas cara a cara. "
+    "El radar muestra el perfil completo de cada uno; la barra inferior compara el BST total."
+)
 
 df_all = load_data()
 df     = df_all[df_all["id"] < 10000].sort_values("id")

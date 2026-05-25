@@ -19,8 +19,8 @@ from data import (
 st.set_page_config(page_title="Pokemon Explorer", page_icon="", layout="wide")
 st.title("Pokémon Data Explorer")
 st.caption(
-    "Datos de PokéAPI — SQLite. "
-    "Usa el menú del sidebar para navegar: Comparador, Pokédex, Análisis, Cobertura de tipos."
+    "Explora los 1 025 Pokémon del Pokédex nacional. "
+    "Filtra por generación, tipo o categoría en el sidebar — todas las gráficas se actualizan en tiempo real."
 )
 
 if IS_SAMPLE_DB:

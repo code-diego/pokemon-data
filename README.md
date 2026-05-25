@@ -10,8 +10,7 @@ Pipeline ETL que descarga todos los datos de [PokéAPI](https://pokeapi.co) y lo
 SQLite. Incluye un **dashboard Streamlit multipágina** interactivo, notebooks de análisis
 exploratorio con Plotly y un workflow de **machine learning** (clustering K-means, en desarrollo).
 
-> **Demo en vivo:** actualiza el badge de arriba con la URL de Streamlit Community Cloud
-> una vez que conectes el repo en [share.streamlit.io](https://share.streamlit.io).
+> **Demo en vivo:** [share.streamlit.io](https://share.streamlit.io).
 
 ## Screenshots
 
@@ -19,7 +18,6 @@ exploratorio con Plotly y un workflow de **machine learning** (clustering K-mean
 |:---:|:---:|:---:|
 | ![main](docs/screenshots/main.png) | ![pokedex](docs/screenshots/pokedex.png) | ![cobertura](docs/screenshots/cobertura.png) |
 
-> Las capturas se añaden en `docs/screenshots/` — ver [guía](docs/screenshots/README.md).
 
 ## Página principal (Dashboard)
 
@@ -35,14 +33,14 @@ streamlit run dashboard/App.py
 
 Se abre en `http://localhost:8501`. Todas las páginas están en el menú lateral:
 
-| Página | Para qué sirve | Qué incluye |
-|--------|---------------|-------------|
-| **Vista general** | Explorar el Pokédex completo con filtros combinados. Ideal para comparar generaciones o ver qué tan raro es un tipo. | KPIs (total, legendarios, dual-tipo), gráfica de distribución de tipos, scatter peso/altura con BST como tamaño de burbuja, tabla filtrable. Los filtros del sidebar afectan todas las vistas. |
-| **Comparador** | Poner cara a cara 2–6 Pokémon y ver en qué stats destaca cada uno. Útil para elegir un equipo o entender diferencias de diseño entre generaciones. | Tarjetas con sprite y color del tipo, radar de stats superpuesto, barra horizontal de BST, tabla con máximos resaltados. Los chips del selector se colorean según el tipo del Pokémon. |
-| **Pokédex** | Consultar la ficha completa de cualquier Pokémon: sus stats, cómo le afecta cada tipo de ataque y sus métricas de juego. | Sprite, badges de tipo, stats en barra horizontal, tabla de debilidades/resistencias agrupada por multiplicador (×4 / ×2 / ×½ / ×¼ / ×0 / ×1). |
-| **Análisis estadístico** | Responder preguntas estadísticas: ¿qué stats correlacionan? ¿son los legendarios realmente más fuertes? ¿qué tipo tiene mayor BST mediano? | Heatmap de correlaciones Pearson, histogramas por categoría, violín + **test Mann-Whitney U** (legendarios vs normales), boxplot de BST por tipo con top/bottom 10 y tabla comparativa. |
-| **Cobertura de tipos** | Calcular puntos débiles de un Pokémon o detectar huecos de cobertura en un equipo ofensivo. Práctico para construir equipos. | **Modo defensivo** — selecciona 1–2 tipos y ve qué te golpea con ×4/×2/×½/×0. **Modo ofensivo** — selecciona hasta 4 tipos de ataque y ve qué tipos defensivos quedas sin cubrir. Botones coloreados por tipo. |
-| **Acerca del proyecto** | Entender el stack técnico, el volumen de datos y cómo está construido el pipeline. Útil para revisores o reclutadores. | Stack completo, métricas del dataset, diagrama del pipeline ETL e instrucciones de instalación. |
+| Página | Descripción |
+|--------|-------------|
+| **Vista general** | KPIs, filtros por gen/tipo/categoría, distribución de tipos y tabla filtrable |
+| **Comparador** | Radar de stats y BST para 2–6 Pokémon lado a lado |
+| **Pokédex** | Ficha individual: sprite, stats, debilidades y métricas de juego |
+| **Análisis estadístico** | Correlaciones, histogramas, Mann-Whitney U y BST por tipo |
+| **Cobertura de tipos** | Calculadora defensiva/ofensiva de cobertura de tipos |
+| **Acerca del proyecto** | Stack técnico, pipeline y volumen de datos |
 
 
 ## Estructura

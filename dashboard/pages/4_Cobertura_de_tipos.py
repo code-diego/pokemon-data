@@ -17,6 +17,11 @@ from data import (
 
 st.set_page_config(page_title="Cobertura de Tipos", layout="wide")
 st.title("Cobertura y Efectividad de Tipos")
+st.caption(
+    "Calcula puntos débiles o huecos ofensivos. "
+    "Modo defensivo: elige 1–2 tipos y ve qué te golpea con ×4/×2/×½/×0. "
+    "Modo ofensivo: elige hasta 4 tipos de ataque y ve qué tipos quedan sin cubrir."
+)
 
 
 def _inject_type_button_css() -> None:

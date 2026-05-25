@@ -14,7 +14,11 @@ from data import load_data, STAT_COLS, STAT_LABELS, TYPE_COLORS, TYPE_ES, pokemo
 
 st.set_page_config(page_title="Análisis Estadístico", layout="wide")
 st.title("Análisis Estadístico")
-st.caption("Solo formas base (1 025 Pokémon, id < 10 000).")
+st.caption(
+    "Análisis estadístico de los 1 025 Pokémon base. "
+    "Explora correlaciones entre stats, distribuciones por categoría, "
+    "test de hipótesis (legendarios vs normales) y BST comparado por tipo."
+)
 
 df_all = load_data()
 df     = df_all[df_all["id"] < 10000].copy()
