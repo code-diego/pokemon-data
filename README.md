@@ -23,12 +23,16 @@ exploratorio con Plotly y un workflow de **machine learning** (clustering K-mean
 ```bash
 # 1ra vez: instalar, descargar y construir la base de datos
 pip install -r requirements.txt
-python scripts/fetch.py       
-python scripts/build_db.py   
+python scripts/fetch.py        # ~10 min — descarga de PokéAPI
+python scripts/build_db.py     # construye data/pokemon.db
 
-# Muestra la pagina (dashboard)
+# Iniciar el dashboard
 streamlit run dashboard/App.py
 ```
+
+> **Demo con datos de muestra:** si no quieres ejecutar el ETL completo, genera la BD reducida
+> (gen I–III, ~150 Pokémon) con `python scripts/build_sample_db.py`. El dashboard la detecta
+> automáticamente y muestra un banner informativo.
 
 Se abre en `http://localhost:8501`. Todas las páginas están en el menú lateral:
 
@@ -69,16 +73,16 @@ pokemon-data/
 │   └── MONGO_GUIDE.md        # guía de instalación de MongoDB
 ├── requirements.txt
 ├── requirements-nosql.txt    # pymongo (opcional, solo para MongoDB)
-└── data/                     # archivos generados — .gitignore
-    ├── sample.db             # BD reducida committeable (build_sample_db.py)
-    ├── raw/                  # caché JSON por fetch.py
+└── data/
+    ├── sample.db             # ✅ en git — BD demo gen I–III (build_sample_db.py)
+    ├── raw/                  # ❌ gitignore — caché JSON (fetch.py)
     │   ├── pokemon/          # 1,350 archivos
     │   ├── species/          # 1,025 archivos
     │   ├── types/            #    21 archivos
     │   ├── abilities/        #   371 archivos
     │   └── moves/            #   937 archivos
-    ├── pokemon.db            # BD SQLite completa (build_db.py)
-    └── pokemon_docs.json     # respaldo JSON para MongoDB
+    ├── pokemon.db            # ❌ gitignore — BD completa (build_db.py)
+    └── pokemon_docs.json     # ❌ gitignore — respaldo MongoDB
 ```
 
 ## Requisitos

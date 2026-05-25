@@ -1,6 +1,7 @@
-# Datos descargados y archivos generados
-data/
-!data/sample.db
+# Datos generados — se ignoran individualmente para que data/sample.db sí se pueda commitear
+data/raw/
+data/pokemon.db
+data/pokemon_docs.json
 
 # Carpeta personal de explicaciones (privada)
 explain/
