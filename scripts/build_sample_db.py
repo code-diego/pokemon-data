@@ -14,16 +14,13 @@ from pathlib import Path
 GENS = ("generation-i", "generation-ii", "generation-iii")
 
 # ── Localizar la BD fuente ────────────────────────────────────────────────
-ROOT = next(
-    (p for p in [Path.cwd(), *Path.cwd().parents] if (p / "data" / "pokemon.db").exists()),
-    None,
-)
-if ROOT is None:
+ROOT = Path(__file__).parent.parent
+SRC  = ROOT / "data" / "pokemon.db"
+DST  = ROOT / "data" / "sample.db"
+
+if not SRC.exists():
     print("ERROR: No se encontró data/pokemon.db. Ejecuta primero build_db.py.")
     sys.exit(1)
-
-SRC = ROOT / "data" / "pokemon.db"
-DST = ROOT / "data" / "sample.db"
 
 if DST.exists():
     DST.unlink()

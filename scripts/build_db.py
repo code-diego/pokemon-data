@@ -187,6 +187,10 @@ def load_species(conn: sqlite3.Connection) -> int:
     return len(rows)
 
 
+def _damage_names(dr: dict, key: str) -> str:
+    return ",".join(x["name"] for x in dr.get(key, []))
+
+
 def load_types(conn: sqlite3.Connection) -> int:
     t_dir = DATA_DIR / "types"
     if not t_dir.exists():
@@ -200,13 +204,11 @@ def load_types(conn: sqlite3.Connection) -> int:
             continue
 
         dr = d.get("damage_relations", {})
-        def names(key):
-            return ",".join(x["name"] for x in dr.get(key, []))
-
         rows.append((
             d.get("name"),
-            names("double_damage_to"), names("half_damage_to"), names("no_damage_to"),
-            names("double_damage_from"), names("half_damage_from"), names("no_damage_from"),
+            _damage_names(dr, "double_damage_to"), _damage_names(dr, "half_damage_to"),
+            _damage_names(dr, "no_damage_to"),     _damage_names(dr, "double_damage_from"),
+            _damage_names(dr, "half_damage_from"), _damage_names(dr, "no_damage_from"),
         ))
 
     conn.cursor().executemany("INSERT OR REPLACE INTO types VALUES (?,?,?,?,?,?,?)", rows)

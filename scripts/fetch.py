@@ -99,9 +99,14 @@ async def download_resource(
 
 async def get_all_urls(session: aiohttp.ClientSession, resource: str) -> list[tuple[str, str]]:
     url = f"{BASE_URL}/{resource}?limit=100000"
-    data = await session.get(url)
-    data = await data.json()
-    return [(item["name"], item["url"]) for item in data.get("results", [])]
+    try:
+        async with session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as resp:
+            resp.raise_for_status()
+            payload = await resp.json()
+    except Exception as exc:
+        print(f"\n[ERROR] No se pudo obtener la lista de {resource}: {exc}", file=sys.stderr)
+        return []
+    return [(item["name"], item["url"]) for item in payload.get("results", [])]
 
 
 # ---------------------------------------------------------------------------

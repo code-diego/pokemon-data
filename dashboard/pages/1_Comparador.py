@@ -52,7 +52,8 @@ if len(seleccion) < 2:
     st.info("Selecciona al menos 2 Pokémon para comparar.")
     st.stop()
 
-sel = df[df["name"].isin(seleccion)].copy()
+# Preservar el orden de selección del usuario (no el orden del Pokédex)
+sel = df[df["name"].isin(seleccion)].set_index("name").loc[seleccion].reset_index().copy()
 
 # ── Tarjetas de Pokémon ───────────────────────────────────────────────────
 st.divider()
