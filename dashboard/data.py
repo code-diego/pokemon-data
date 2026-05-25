@@ -144,6 +144,19 @@ def load_type_chart() -> pd.DataFrame:
     return chart
 
 
+# ── Formateo de nombres de Pokémon ────────────────────────────────────────
+_DISPLAY_NAME_OVERRIDES = {
+    "nidoran-f": "Nidoran ♀",
+    "nidoran-m": "Nidoran ♂",
+}
+
+def pokemon_display_name(name: str) -> str:
+    """Convierte nombre interno (lowercase, guiones) a texto legible para la UI."""
+    if name in _DISPLAY_NAME_OVERRIDES:
+        return _DISPLAY_NAME_OVERRIDES[name]
+    return name.replace("-", " ").title()
+
+
 def defensive_profile(type1: str, type2: str | None = None) -> dict:
     """
     Calcula el multiplicador de daño recibido para cada tipo atacante.

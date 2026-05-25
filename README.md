@@ -20,13 +20,11 @@ pokemon-data/
 ├── dashboard/
 │   ├── app.py            # Página principal — Vista general (filtros, KPIs, gráficas)
 │   ├── data.py           # Módulo compartido: carga cacheada, type-chart, helpers
-│   ├── ml.py             # Helper ML: cluster_pokemon(), label_archetype()
 │   └── pages/
-│       ├── 1_Comparador.py          # Radar de stats para 2-6 Pokémon
-│       ├── 2_Ficha_individual.py    # Sprite, tipos, stats y debilidades
+│       ├── 1_Comparador.py          # Sprites + radar de stats para 2-6 Pokémon
+│       ├── 2_Pokedex.py             # Pokédex: sprite, tipos, stats y debilidades
 │       ├── 3_Analisis_estadistico.py# Correlaciones, distribuciones, test Mann-Whitney
-│       ├── 4_Cobertura_de_tipos.py  # Calculadora defensiva/ofensiva de tipos
-│       └── 5_Clusters_ML.py        # K-means + PCA interactivo
+│       └── 4_Cobertura_de_tipos.py  # Calculadora defensiva/ofensiva de tipos
 ├── docs/
 │   └── MONGO_GUIDE.md    # Guía de instalación de MongoDB (Linux/Fedora, Windows, macOS)
 ├── requirements.txt      # Dependencias del proyecto
@@ -196,11 +194,10 @@ Se abre en `http://localhost:8501`. El menú lateral muestra todas las páginas:
 | Página | Descripción |
 |--------|-------------|
 | **Vista general** | Filtros (generación, tipo, categoría), KPIs, distribución de tipos, scatter peso/altura, BST por generación, tabla |
-| **Comparador** | Selecciona 2–6 Pokémon — radar de stats superpuesto + tabla comparativa |
-| **Ficha individual** | Sprite, badges de tipo, barras de stats, debilidades/resistencias calculadas (×4/×2/×½/×¼/×0) |
+| **Comparador** | Selecciona 2–6 Pokémon — sprites, radar de stats superpuesto + tabla comparativa |
+| **Pokédex** | Sprite, número de Pokédex, badges de tipo, stats con pestañas, debilidades/resistencias (×4/×2/×½/×¼/×0) |
 | **Análisis estadístico** | Correlaciones entre stats, distribuciones por categoría, test Mann-Whitney (legendarios vs normales) |
 | **Cobertura de tipos** | Modo defensivo (qué te golpea y cómo) · Modo ofensivo (qué tipos cubre tu equipo) |
-| **Clusters ML** | K-means interactivo (slider de k), PCA 2D, perfil de arquetipos, curva de codo |
 
 ## Machine Learning
 
@@ -216,8 +213,8 @@ Los clusters identifican arquetipos estadísticos coherentes sin etiquetas previ
 La validación comprueba que los legendarios se concentran en el cluster de BST alto
 aunque el modelo nunca recibió esa información.
 
-El helper `dashboard/ml.py` expone `cluster_pokemon()` y `label_archetype()`, reutilizados
-por la página interactiva `dashboard/pages/5_Clusters_ML.py`.
+El análisis completo está documentado en `notebooks/clustering.ipynb`.
+Una vez el modelo esté validado, se añadirá una página interactiva al dashboard.
 
 ## ¿Cuándo usar cada backend?
 

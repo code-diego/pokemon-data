@@ -24,7 +24,7 @@ st.set_page_config(
 st.title("Pokémon Data Explorer")
 st.caption(
     "Datos de PokéAPI — SQLite. "
-    "Usa el menú del sidebar para navegar: Comparador, Ficha, Análisis, Cobertura, Clusters."
+    "Usa el menú del sidebar para navegar: Comparador, Pokédex, Análisis, Cobertura de tipos."
 )
 
 df_all = load_data()
