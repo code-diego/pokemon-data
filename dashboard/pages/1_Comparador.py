@@ -1,11 +1,12 @@
 """
-Comparador de Pokémon — sprites, radar de stats y tabla comparativa.
+Comparador de Pokémon — tarjetas visuales, radar de stats y BST comparado.
 """
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import pandas as pd
+import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
@@ -36,19 +37,48 @@ if len(seleccion) < 2:
 
 sel = df[df["name"].isin(seleccion)].copy()
 
-# ── Fila de sprites ───────────────────────────────────────────────────────
+# ── Tarjetas de Pokémon ───────────────────────────────────────────────────
 st.divider()
-sprite_cols = st.columns(len(sel))
-for col, (_, row) in zip(sprite_cols, sel.iterrows()):
+card_cols = st.columns(len(sel))
+for col, (_, row) in zip(card_cols, sel.iterrows()):
     with col:
+        t1    = row["type1"]
+        color = TYPE_COLORS.get(t1, "#888888")
         sprite = row["sprite_default"]
+        name   = pokemon_display_name(row["name"])
+        bst    = int(row["bst"]) if pd.notna(row["bst"]) else "—"
+
         if pd.notna(sprite) and sprite:
-            st.image(sprite, width=120)
-        st.markdown(f"**{pokemon_display_name(row['name'])}**")
-        badges = type_badge_html(row["type1"], "13px")
+            img_html = (
+                f'<img src="{sprite}" width="120" '
+                f'style="object-fit:contain;image-rendering:pixelated;">'
+            )
+        else:
+            img_html = (
+                '<div style="height:120px;display:flex;align-items:center;'
+                'justify-content:center;color:#555;font-size:2em;">?</div>'
+            )
+
+        badges_html = type_badge_html(t1, "12px")
         if pd.notna(row["type2"]):
-            badges += " " + type_badge_html(row["type2"], "13px")
-        st.markdown(badges, unsafe_allow_html=True)
+            badges_html += " " + type_badge_html(row["type2"], "12px")
+
+        st.markdown(
+            f"""
+            <div style="background:linear-gradient(160deg,{color}28,{color}0a);
+                        border:1px solid {color}66;border-radius:14px;
+                        padding:20px 12px 16px;text-align:center;">
+              {img_html}
+              <div style="font-size:1.05em;font-weight:700;margin-top:10px;
+                          color:#eee;">{name}</div>
+              <div style="margin:6px 0;">{badges_html}</div>
+              <div style="color:#888;font-size:.82em;letter-spacing:1px;">
+                BST &nbsp; {bst}
+              </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
 st.divider()
 
@@ -81,6 +111,33 @@ fig.update_layout(
     legend=dict(font=dict(size=13)),
 )
 st.plotly_chart(fig, use_container_width=True)
+
+# ── BST comparado ─────────────────────────────────────────────────────────
+st.subheader("BST total comparado")
+bst_rows = [
+    {"Pokémon": pokemon_display_name(r["name"]),
+     "BST": int(r["bst"]),
+     "tipo": r["type1"]}
+    for _, r in sel.iterrows()
+]
+df_bst = pd.DataFrame(bst_rows)
+fig_bst = px.bar(
+    df_bst, x="BST", y="Pokémon",
+    orientation="h",
+    color="tipo", color_discrete_map=TYPE_COLORS,
+    text="BST",
+    range_x=[0, 750],
+    labels={"BST": "Base Stat Total", "Pokémon": ""},
+    template="plotly_dark",
+)
+fig_bst.update_traces(textposition="outside")
+fig_bst.update_layout(
+    height=100 + len(sel) * 52,
+    showlegend=False,
+    yaxis=dict(autorange="reversed"),
+    margin=dict(r=80, t=10, b=10),
+)
+st.plotly_chart(fig_bst, use_container_width=True)
 
 # ── Tabla comparativa ─────────────────────────────────────────────────────
 st.subheader("Tabla comparativa")

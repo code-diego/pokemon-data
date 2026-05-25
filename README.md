@@ -4,36 +4,59 @@ Pipeline ETL que descarga todos los datos de [PokéAPI](https://pokeapi.co) y lo
 SQLite. Incluye un **dashboard Streamlit multipágina** interactivo, notebooks de análisis
 exploratorio con Plotly y un workflow de **machine learning** (clustering K-means).
 
+## Página principal (Dashboard)
+
+```bash
+# 1ra vez: instalar, descargar y construir la base de datos
+pip install -r requirements.txt
+python scripts/fetch.py       
+python scripts/build_db.py   
+
+# Muestra la pagina (dashboard)
+streamlit run dashboard/App.py
+```
+
+Se abre en `http://localhost:8501`. Todas las páginas están en el menú lateral:
+
+| Página | Descripción |
+|--------|-------------|
+| **Vista general** | Filtros por generación, tipo y categoría — KPIs, distribución de tipos, scatter peso/altura, BST por generación, tabla filtrada |
+| **Comparador** | Selecciona 2–6 Pokémon: sprites lado a lado, radar de stats superpuesto, tabla comparativa con máximos resaltados |
+| **Pokédex** | Busca cualquier Pokémon: sprite, número, tipos, métricas (BST, captura, felicidad…), stats con barra y debilidades/resistencias agrupadas (×4 / ×2 / ×½ / ×¼ / ×0) |
+| **Análisis estadístico** | Mapa de calor de correlaciones, distribuciones por categoría, violín + test Mann-Whitney (legendarios vs normales) |
+| **Cobertura de tipos** | Modo defensivo (¿qué te golpea y cómo?) · Modo ofensivo (¿qué tipos cubre tu equipo?) |
+
+
 ## Estructura
 
 ```
 pokemon-data/
 ├── scripts/
-│   ├── fetch.py          # Descarga datos de PokéAPI → data/raw/
-│   ├── build_db.py       # Construye pokemon.db (SQLite, 9 tablas relacionadas)
-│   └── build_nosql.py    # Construye documentos → data/pokemon_docs.json + MongoDB
+│   ├── fetch.py          # descarga datos de PokéAPI → data/raw/
+│   ├── build_db.py       # construye pokemon.db (SQLite, 9 tablas relacionadas)
+│   └── build_nosql.py    # construye json → data/pokemon_docs.json (MongoDB)
 ├── notebooks/
-│   ├── relational.ipynb  # Análisis exploratorio sobre SQLite (Plotly — hover, zoom)
-│   ├── clustering.ipynb  # Clustering K-means + PCA — arquetipos por stats
-│   └── nosql.ipynb       # Consultas sobre MongoDB
+│   ├── relational.ipynb  # análisis exploratorio en SQLite (Plotly — hover, zoom)
+│   ├── clustering.ipynb  # clustering K-means + PCA — en progreso *
+│   └── nosql.ipynb       # consultas en MongoDB
 ├── dashboard/
-│   ├── app.py            # Página principal — Vista general (filtros, KPIs, gráficas)
-│   ├── data.py           # Módulo compartido: carga cacheada, type-chart, helpers
+│   ├── app.py            # página principal —  (filtros, KPIs, gráficas)
+│   ├── data.py           # módulo compartido: carga cacheada, type-chart, helpers
 │   └── pages/
-│       ├── 1_Comparador.py          # Sprites + radar de stats para 2-6 Pokémon
-│       ├── 2_Pokedex.py             # Pokédex: sprite, tipos, stats y debilidades
-│       ├── 3_Analisis_estadistico.py# Correlaciones, distribuciones, test Mann-Whitney
-│       └── 4_Cobertura_de_tipos.py  # Calculadora defensiva/ofensiva de tipos
+│       ├── 1_Comparador.py           # stats para 2-6 Pokémon
+│       ├── 2_Pokedex.py             
+│       ├── 3_Analisis_estadistico.py # test Mann-Whitney
+│       └── 4_Cobertura_de_tipos.py   # calculadora defensiva/ofensiva de tipos
 ├── docs/
-│   └── MONGO_GUIDE.md    # Guía de instalación de MongoDB (Linux/Fedora, Windows, macOS)
+│   └── MONGO_GUIDE.md    # guía de instalación de MongoDB 
 ├── requirements.txt
-└── data/                 # Archivos generados — ignorados por git
-    ├── raw/              # Caché JSON descargada por fetch.py
-    │   ├── pokemon/      # 1,350 archivos — datos individuales por Pokémon
-    │   ├── species/      # 1,025 archivos — especie, generación, color, hábitat
-    │   ├── types/        #    21 archivos — relaciones de daño entre tipos
-    │   ├── abilities/    #   371 archivos — efectos de habilidades
-    │   └── moves/        #   937 archivos — poder, precisión, PP, clase de daño
+└── data/                 # archivos generados —  .gitignore
+    ├── raw/              # caché JSON por fetch.py
+    │   ├── pokemon/      # 1,350 archivos 
+    │   ├── species/      # 1,025 archivos 
+    │   ├── types/        #    21 archivos 
+    │   ├── abilities/    #   371 archivos 
+    │   └── moves/        #   937 archivos
     ├── pokemon.db        # Base de datos SQLite (build_db.py)
     └── pokemon_docs.json # Respaldo JSON para MongoDB (build_nosql.py)
 ```
@@ -54,30 +77,6 @@ pip install -r requirements.txt
 | `streamlit`    | Dashboard multipágina |
 | `scikit-learn` | K-means, PCA, StandardScaler — clustering ML (arrastra scipy) |
 | `pymongo`      | Conexión con MongoDB *(solo para el backend NoSQL opcional)* |
-
----
-
-## Dashboard interactivo
-
-```bash
-# Primera vez: instalar, descargar y construir la base de datos
-pip install -r requirements.txt
-python scripts/fetch.py       # ~minutos — descarga 1 025 Pokémon de PokéAPI
-python scripts/build_db.py    # construye data/pokemon.db (SQLite)
-
-# Arrancar el dashboard
-streamlit run dashboard/app.py
-```
-
-Se abre en `http://localhost:8501`. Todas las páginas están en el menú lateral:
-
-| Página | Descripción |
-|--------|-------------|
-| **Vista general** | Filtros por generación, tipo y categoría — KPIs, distribución de tipos, scatter peso/altura, BST por generación, tabla filtrada |
-| **Comparador** | Selecciona 2–6 Pokémon: sprites lado a lado, radar de stats superpuesto, tabla comparativa con máximos resaltados |
-| **Pokédex** | Busca cualquier Pokémon: sprite, número, tipos, métricas (BST, captura, felicidad…), stats con barra y debilidades/resistencias agrupadas (×4 / ×2 / ×½ / ×¼ / ×0) |
-| **Análisis estadístico** | Mapa de calor de correlaciones, distribuciones por categoría, violín + test Mann-Whitney (legendarios vs normales) |
-| **Cobertura de tipos** | Modo defensivo (¿qué te golpea y cómo?) · Modo ofensivo (¿qué tipos cubre tu equipo?) |
 
 ---
 

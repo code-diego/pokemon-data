@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+import pandas as pd
 import streamlit as st
 
 from data import (
@@ -17,37 +18,78 @@ from data import (
 st.set_page_config(page_title="Cobertura de Tipos", layout="wide")
 st.title("Cobertura y Efectividad de Tipos")
 
-modo = st.radio(
-    "Modo",
-    ["Defensivo — ¿qué me golpea?", "Ofensivo — ¿qué cubro?"],
-    horizontal=True,
-)
+# ── Estado inicial ────────────────────────────────────────────────────────
+if "cob_def" not in st.session_state:
+    st.session_state.cob_def = ["normal"]
+if "cob_off" not in st.session_state:
+    st.session_state.cob_off = ["water", "fire", "grass"]
 
-st.divider()
 all_types = sorted(TYPE_COLORS.keys())
+type_rows  = [all_types[i:i+6] for i in range(0, 18, 6)]
+
+
+def _toggle_def(t: str) -> None:
+    cur = list(st.session_state.cob_def)
+    if t in cur:
+        new = [x for x in cur if x != t]
+        if new:  # siempre mantener al menos 1 tipo
+            st.session_state.cob_def = new
+    else:
+        if len(cur) < 2:
+            st.session_state.cob_def = cur + [t]
+        else:
+            st.session_state.cob_def = [cur[0], t]  # reemplaza el 2.º tipo
+
+
+def _toggle_off(t: str) -> None:
+    cur = list(st.session_state.cob_off)
+    if t in cur:
+        st.session_state.cob_off = [x for x in cur if x != t]
+    elif len(cur) < 4:
+        st.session_state.cob_off = cur + [t]
+
+
+def _type_grid(prefix: str, selected: list) -> None:
+    """Renderiza una cuadrícula 3×6 de botones de tipo."""
+    for row_types in type_rows:
+        cols = st.columns(6)
+        for col, t in zip(cols, row_types):
+            with col:
+                is_sel = t in selected
+                if st.button(
+                    TYPE_ES.get(t, t),
+                    key=f"{prefix}_{t}",
+                    type="primary" if is_sel else "secondary",
+                    use_container_width=True,
+                ):
+                    if prefix == "def":
+                        _toggle_def(t)
+                    else:
+                        _toggle_off(t)
+                    st.rerun()
+
+
+# ── Tabs modo ─────────────────────────────────────────────────────────────
+tab_def, tab_off = st.tabs(["🛡️ Defensivo — ¿qué me golpea?", "⚔️ Ofensivo — ¿qué cubro?"])
 
 # ── Modo defensivo ────────────────────────────────────────────────────────
-if modo.startswith("Defensivo"):
+with tab_def:
     st.subheader("Perfil defensivo")
-    st.caption("Elige 1 o 2 tipos y ve qué tipos de ataque te golpean y cómo.")
+    st.caption(
+        "Selecciona 1 o 2 tipos. "
+        "Click en un tipo seleccionado para quitarlo (mínimo 1)."
+    )
 
-    col_a, col_b = st.columns(2)
-    with col_a:
-        t1 = st.selectbox("Tipo primario", all_types,
-                          format_func=lambda t: TYPE_ES.get(t, t))
-    with col_b:
-        t2_opts = ["(ninguno)"] + all_types
-        t2_raw  = st.selectbox("Tipo secundario (opcional)", t2_opts,
-                               format_func=lambda t: "—" if t == "(ninguno)" else TYPE_ES.get(t, t))
-        t2 = None if t2_raw == "(ninguno)" else t2_raw
+    _type_grid("def", st.session_state.cob_def)
 
-    st.markdown("**Tipos seleccionados:**")
-    badges = type_badge_html(t1, "15px")
-    if t2:
-        badges += "  " + type_badge_html(t2, "15px")
-    st.markdown(badges, unsafe_allow_html=True)
+    # Mostrar tipos activos como badges
     st.write("")
+    sel_html = "".join(type_badge_html(t, "15px") + "&nbsp;" for t in st.session_state.cob_def)
+    st.markdown(f"**Combinación activa:** {sel_html}", unsafe_allow_html=True)
+    st.divider()
 
+    t1 = st.session_state.cob_def[0]
+    t2 = st.session_state.cob_def[1] if len(st.session_state.cob_def) > 1 else None
     profile = defensive_profile(t1, t2)
 
     buckets = {4: [], 2: [], 1: [], 0.5: [], 0.25: [], 0: []}
@@ -58,21 +100,15 @@ if modo.startswith("Defensivo"):
                 buckets[key].append(atk)
                 break
 
-    bucket_meta = {
-        4:    ("Muy débil",      "×4",  "#FF0000"),
-        2:    ("Débil",          "×2",  "#FF7700"),
-        1:    ("Neutral",        "×1",  "#888888"),
-        0.5:  ("Resiste",        "×½",  "#0088FF"),
-        0.25: ("Muy resistente", "×¼",  "#0044BB"),
-        0:    ("Inmune",         "×0",  "#222222"),
-    }
-
     for key in [4, 2, 0.5, 0.25, 0]:
         types = buckets[key]
         if not types:
             continue
-        label, mult_str, _ = bucket_meta[key]
-        st.markdown(f"**{mult_str}  {label}**")
+        labels_map = {
+            4: "×4  Muy débil", 2: "×2  Débil",
+            0.5: "×½  Resiste", 0.25: "×¼  Muy resistente", 0: "×0  Inmune",
+        }
+        st.markdown(f"**{labels_map[key]}**")
         st.markdown(" ".join(type_badge_html(t) for t in sorted(types)),
                     unsafe_allow_html=True)
         st.write("")
@@ -84,61 +120,62 @@ if modo.startswith("Defensivo"):
                         unsafe_allow_html=True)
 
 # ── Modo ofensivo ─────────────────────────────────────────────────────────
-else:
+with tab_off:
     st.subheader("Cobertura ofensiva")
+    n_sel = len(st.session_state.cob_off)
     st.caption(
-        "Elige hasta 4 tipos de movimientos de tu equipo. "
+        f"Selecciona hasta 4 tipos de ataque ({n_sel}/4 seleccionados). "
         "Se muestra qué tipos defensivos quedan cubiertos (≥×2) y cuáles no."
     )
 
-    team = st.multiselect(
-        "Tipos de ataque de tu equipo",
-        all_types,
-        default=["water", "fire", "grass"],
-        format_func=lambda t: TYPE_ES.get(t, t),
-        max_selections=4,
-    )
+    _type_grid("off", st.session_state.cob_off)
 
+    team = st.session_state.cob_off
     if not team:
         st.info("Selecciona al menos un tipo de ataque.")
         st.stop()
+
+    # Mostrar tipos activos
+    st.write("")
+    off_html = "".join(type_badge_html(t, "15px") + "&nbsp;" for t in team)
+    st.markdown(f"**Equipo activo:** {off_html}", unsafe_allow_html=True)
+    st.divider()
 
     chart = load_type_chart()
     if chart.empty:
         st.error("No se pudo cargar la tabla de tipos.")
         st.stop()
 
-    # Para cada tipo defensor, multiplier máximo que ofrece el equipo
-    results = {}
-    for defender in all_types:
-        best = max(chart.loc[defender, t] for t in team if t in chart.columns)
-        results[defender] = best
+    results = {
+        defender: max(chart.loc[defender, t] for t in team if t in chart.columns)
+        for defender in all_types
+    }
 
-    covered_2x   = [d for d, m in results.items() if m >= 2]
-    covered_half = [d for d, m in results.items() if m == 0.5]
-    not_covered  = [d for d, m in results.items() if m < 2 and m > 0]
-    immune       = [d for d, m in results.items() if m == 0]
+    covered_2x  = [d for d, m in results.items() if m >= 2]
+    not_covered = [d for d, m in results.items() if 0 < m < 2]
+    immune      = [d for d, m in results.items() if m == 0]
 
     c1, c2, c3 = st.columns(3)
     c1.metric("Tipos cubiertos (≥×2)", len(covered_2x))
-    c2.metric("Sin cobertura (<×2)", len(not_covered))
-    c3.metric("Inmunes a todo el equipo", len(immune))
+    c2.metric("Sin cobertura super-efectiva", len(not_covered))
+    c3.metric("Inmunes al equipo", len(immune))
 
     st.write("")
-    st.markdown("**Cubiertos ×2 o más**")
     if covered_2x:
+        st.markdown("**Cubiertos ×2 o más**")
         st.markdown(" ".join(type_badge_html(t) for t in sorted(covered_2x)),
                     unsafe_allow_html=True)
     else:
-        st.caption("Ninguno.")
+        st.caption("Ningún tipo cubierto super-efectivamente.")
 
-    st.write("")
-    st.markdown("**Sin cobertura super-efectiva**")
     if not_covered:
+        st.write("")
+        st.markdown("**Sin cobertura super-efectiva**")
         st.markdown(" ".join(type_badge_html(t) for t in sorted(not_covered)),
                     unsafe_allow_html=True)
     else:
-        st.caption("Cobertura completa.")
+        st.write("")
+        st.caption("Cobertura completa — todos los tipos son alcanzados con ≥×2.")
 
     if immune:
         st.write("")
@@ -146,17 +183,14 @@ else:
         st.markdown(" ".join(type_badge_html(t) for t in sorted(immune)),
                     unsafe_allow_html=True)
 
-    # Tabla detallada
     with st.expander("Ver tabla completa"):
-        import pandas as pd
         rows = []
         for d in sorted(all_types):
             best_t = max(team, key=lambda t: chart.loc[d, t] if t in chart.columns else 0)
-            best_m = results[d]
             rows.append({
-                "Tipo defensor": TYPE_ES.get(d, d),
+                "Tipo defensor":   TYPE_ES.get(d, d),
                 "Mejor cobertura": TYPE_ES.get(best_t, best_t),
-                "Multiplicador": best_m,
+                "Multiplicador":   results[d],
             })
         df_tbl = pd.DataFrame(rows).sort_values("Multiplicador", ascending=False)
         st.dataframe(df_tbl.set_index("Tipo defensor"), use_container_width=True)

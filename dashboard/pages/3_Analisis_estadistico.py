@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+import numpy as np
 import pandas as pd
 import plotly.express as px
 import streamlit as st
@@ -43,18 +44,32 @@ with tab1:
     )
     st.plotly_chart(fig, use_container_width=True)
 
+    # Insight automático: par de stats más y menos correlacionados
+    stat_corr = corr.loc[STAT_LABELS, STAT_LABELS].copy()
+    np.fill_diagonal(stat_corr.values, np.nan)
+    upper = stat_corr.where(np.triu(np.ones(stat_corr.shape, dtype=bool), k=1))
+    flat  = upper.stack()
+    if len(flat) >= 2:
+        max_pair = flat.idxmax()
+        min_pair = flat.idxmin()
+        st.caption(
+            f"💡 Mayor correlación entre stats: **{max_pair[0]} ↔ {max_pair[1]}** "
+            f"(r = {flat[max_pair]:.2f}) · "
+            f"menor: **{min_pair[0]} ↔ {min_pair[1]}** (r = {flat[min_pair]:.2f})"
+        )
+
     st.markdown("""
 **Cómo leer la matriz:**
 - **r ≈ +1** (rojo): cuando una sube, la otra también tiende a subir.
-- **r ≈ -1** (azul): relación inversa.
+- **r ≈ −1** (azul): relación inversa.
 - **r ≈ 0** (blanco): sin correlación lineal.
 
-El BST correlaciona fuerte con todos los stats porque es su suma.
-La correlación entre stats individuales (p.ej. velocidad vs defensa) revela
-qué perfiles de Pokémon existen — un tanque no es veloz, un velocista no es un muro.
+El BST correlaciona fuerte con todos los stats porque es su suma directa.
+Las correlaciones entre stats individuales revelan perfiles: un tanque suele tener
+alta defensa pero baja velocidad, un velocista sacrifica resistencia.
 """)
 
-# ── Distribuciones ───────────────────────────────────────────────────────
+# ── Distribuciones ────────────────────────────────────────────────────────
 with tab2:
     stat_options = dict(zip(STAT_LABELS + ["BST"], STAT_COLS + ["bst"]))
     stat_sel = st.selectbox("Stat a visualizar", list(stat_options.keys()), index=6)
@@ -65,7 +80,7 @@ with tab2:
         x=col_sel,
         color="categoria",
         color_discrete_map={
-            "Normal":"#4a9eff","Legendario":"#ffd700","Mitico":"#ff6ec7"
+            "Normal": "#4a9eff", "Legendario": "#ffd700", "Mitico": "#ff6ec7"
         },
         barmode="overlay",
         opacity=0.7,
@@ -76,6 +91,16 @@ with tab2:
     )
     fig2.update_layout(height=420, legend_title_text="Categoría")
     st.plotly_chart(fig2, use_container_width=True)
+
+    # Contexto: mediana por categoría
+    medians = df.groupby("categoria")[col_sel].median()
+    parts = [
+        f"**{cat}** = {medians[cat]:.0f}"
+        for cat in ["Normal", "Legendario", "Mitico"]
+        if cat in medians
+    ]
+    if parts:
+        st.caption(f"Mediana de {stat_sel} por categoría: " + " · ".join(parts))
 
     desc = df.groupby("categoria")[col_sel].describe().round(1)
     st.dataframe(desc, use_container_width=True)
@@ -90,11 +115,11 @@ with tab3:
     col_g  = stat_opt2[stat_g]
 
     df_g = df.copy()
-    df_g["grupo"] = df_g["categoria"].replace({"Legendario":"Especial","Mitico":"Especial"})
+    df_g["grupo"] = df_g["categoria"].replace({"Legendario": "Especial", "Mitico": "Especial"})
 
     fig3 = px.violin(
         df_g, y=col_g, x="grupo", color="grupo",
-        color_discrete_map={"Normal":"#4a9eff","Especial":"#ffd700"},
+        color_discrete_map={"Normal": "#4a9eff", "Especial": "#ffd700"},
         box=True, points="outliers",
         labels={col_g: stat_g, "grupo": "Grupo"},
         title=f"{stat_g}: Normales vs. Especiales (legendarios + míticos)",
@@ -107,25 +132,40 @@ with tab3:
     try:
         from scipy import stats as sp_stats
 
-        normal = df_g[df_g["grupo"]=="Normal"][col_g].dropna()
-        espec  = df_g[df_g["grupo"]=="Especial"][col_g].dropna()
+        normal = df_g[df_g["grupo"] == "Normal"][col_g].dropna()
+        espec  = df_g[df_g["grupo"] == "Especial"][col_g].dropna()
+
+        st.info(
+            "**Test Mann-Whitney U** — no asume normalidad en los datos. "
+            "Contrasta si los Pokémon especiales tienen, en general, mayor "
+            f"*{stat_g}* que los normales. "
+            "Un p-valor < 0.05 indica que la diferencia observada es poco probable que sea aleatoria."
+        )
+
         stat_val, pvalue = sp_stats.mannwhitneyu(espec, normal, alternative="greater")
 
-        st.markdown("**Test Mann-Whitney U** (¿los especiales tienen mayor stat?)")
         col_u, col_p = st.columns(2)
         col_u.metric("Estadístico U", f"{stat_val:,.0f}")
         col_p.metric("p-valor", f"{pvalue:.2e}")
 
         if pvalue < 0.001:
-            st.success(f"p = {pvalue:.2e} — diferencia estadísticamente muy significativa. "
-                       f"Los legendarios/míticos tienen {stat_g} significativamente mayor que "
-                       f"los Pokémon normales.")
+            st.success(
+                f"p = {pvalue:.2e} — diferencia estadísticamente muy significativa. "
+                f"Los Pokémon especiales tienen {stat_g} significativamente mayor que los normales."
+            )
         elif pvalue < 0.05:
             st.info(f"p = {pvalue:.2e} — diferencia significativa (p < 0.05).")
         else:
-            st.warning(f"p = {pvalue:.2e} — sin evidencia estadística de diferencia "
-                       f"para {stat_g}.")
+            st.warning(
+                f"p = {pvalue:.2e} — sin evidencia estadística de diferencia para {stat_g}."
+            )
+
+        efecto = espec.median() - normal.median()
+        sign   = "+" if efecto >= 0 else ""
+        st.caption(
+            f"💡 Diferencia de medianas: **{sign}{efecto:.0f} puntos** (especiales − normales) · "
+            f"Mediana especiales = {espec.median():.0f} · normales = {normal.median():.0f}"
+        )
 
     except ImportError:
-        st.info("Instala scikit-learn/scipy para el test estadístico: "
-                "`pip install scikit-learn`")
+        st.info("Instala scikit-learn/scipy para el test estadístico: `pip install scikit-learn`")

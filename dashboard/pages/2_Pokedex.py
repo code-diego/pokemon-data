@@ -11,7 +11,7 @@ import streamlit as st
 
 from data import (
     load_data, defensive_profile,
-    TYPE_ES, STAT_COLS, STAT_LABELS,
+    TYPE_COLORS, TYPE_ES, STAT_COLS, STAT_LABELS,
     type_badge_html, pokemon_display_name,
 )
 
@@ -36,15 +36,30 @@ st.divider()
 col_left, col_right = st.columns([1, 2])
 
 with col_left:
+    # Franja de color del tipo primario
+    t_color = TYPE_COLORS.get(row["type1"], "#888888")
+    st.markdown(
+        f'<div style="background:linear-gradient(90deg,{t_color},{t_color}22,transparent);'
+        f'height:5px;border-radius:4px;margin-bottom:14px;"></div>',
+        unsafe_allow_html=True,
+    )
+
+    # Sprite
     sprite = row["sprite_default"]
     if pd.notna(sprite) and sprite:
         st.image(sprite, width=220)
     else:
         st.caption("*(sin sprite)*")
 
-    st.markdown(f"### #{row['id']:04d}")
+    # Número Pokédex (estilo badge)
+    st.markdown(
+        f'<div style="color:#666;font-size:.8em;letter-spacing:3px;'
+        f'margin-top:10px;font-family:monospace;">#{row["id"]:04d}</div>',
+        unsafe_allow_html=True,
+    )
     st.markdown(f"## {pokemon_display_name(row['name'])}")
 
+    # Badges de tipo
     badges = type_badge_html(row["type1"], "15px")
     if pd.notna(row["type2"]):
         badges += "  " + type_badge_html(row["type2"], "15px")
@@ -52,20 +67,35 @@ with col_left:
 
     st.divider()
 
+    # Métricas con emoji
     m1, m2 = st.columns(2)
-    m1.metric("BST",        int(row["bst"])        if pd.notna(row["bst"])        else "—")
-    m2.metric("Generación", row["gen"]             if pd.notna(row["gen"])        else "—")
+    m1.metric(
+        "⚔️ BST",
+        int(row["bst"]) if pd.notna(row["bst"]) else "—",
+        help="Base Stat Total — suma de los 6 stats base. "
+             "Media global: 427 · Legendarios suelen superar 580.",
+    )
+    m2.metric("🌍 Generación", row["gen"] if pd.notna(row["gen"]) else "—")
 
     m3, m4 = st.columns(2)
-    m3.metric("Categoría",  row["categoria"])
-    m4.metric("Captura",    int(row["capture_rate"]) if pd.notna(row["capture_rate"]) else "—")
+    m3.metric("⭐ Categoría", row["categoria"])
+    m4.metric(
+        "🎯 Captura",
+        int(row["capture_rate"]) if pd.notna(row["capture_rate"]) else "—",
+        help="Tasa de captura: 255 = muy fácil · 45 = difícil · 3 = extremadamente difícil.",
+    )
 
     m5, m6 = st.columns(2)
-    m5.metric("Altura",  f"{row['height_m']:.1f} m"   if pd.notna(row["height_m"])  else "—")
-    m6.metric("Peso",    f"{row['weight_kg']:.1f} kg"  if pd.notna(row["weight_kg"]) else "—")
+    m5.metric("📏 Altura",  f"{row['height_m']:.1f} m"   if pd.notna(row["height_m"])  else "—")
+    m6.metric("⚖️ Peso",    f"{row['weight_kg']:.1f} kg"  if pd.notna(row["weight_kg"]) else "—")
 
     if pd.notna(row["base_happiness"]):
-        st.metric("Felicidad base", int(row["base_happiness"]))
+        st.metric(
+            "😊 Felicidad",
+            int(row["base_happiness"]),
+            help="Felicidad base al capturarlo. Afecta evoluciones por amistad "
+                 "y la potencia de algunos movimientos.",
+        )
 
 with col_right:
     tab_stats, tab_weak = st.tabs(["Estadísticas base", "Efectividad de tipos"])
