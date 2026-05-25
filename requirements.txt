@@ -6,8 +6,11 @@ tqdm>=4.66        # opcional — barra de progreso en fetch.py
 pandas>=2.0
 matplotlib>=3.8
 numpy>=1.26
-plotly>=5.20      # gráficas interactivas (hover, zoom) — notebook sección 10 y dashboard
-streamlit>=1.30   # dashboard maqueta — ver dashboard/app.py
+plotly>=5.20      # gráficas interactivas (hover, zoom) — notebooks y dashboard
+streamlit>=1.30   # dashboard multipágina — ver dashboard/app.py
+
+# Machine Learning
+scikit-learn>=1.4 # clustering K-means + PCA + StandardScaler (arrastra scipy)
 
 # MongoDB
 pymongo>=4.6

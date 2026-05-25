@@ -1,103 +1,35 @@
 """
-Dashboard maqueta — Pokemon Data Explorer
+Dashboard Pokémon — Vista General (página principal).
 Ejecutar: streamlit run dashboard/app.py
+Navega entre páginas con el menú del sidebar izquierdo.
 """
-
-import sqlite3
+import sys
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent))
 
-import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import streamlit as st
 
-# ── Constantes de tema ────────────────────────────────────────────────────
-TYPE_COLORS = {
-    "normal": "#A8A77A",   "fire": "#EE8130",    "water": "#6390F0",
-    "electric": "#F7D02C", "grass": "#7AC74C",   "ice": "#96D9D6",
-    "fighting": "#C22E28", "poison": "#A33EA1",  "ground": "#E2BF65",
-    "flying": "#A98FF3",   "psychic": "#F95587", "bug": "#A6B91A",
-    "rock": "#B6A136",     "ghost": "#735797",   "dragon": "#6F35FC",
-    "dark": "#705746",     "steel": "#B7B7CE",   "fairy": "#D685AD",
-}
-TYPE_ES = {
-    "normal": "Normal",      "fire": "Fuego",      "water": "Agua",
-    "electric": "Electrico", "grass": "Planta",    "ice": "Hielo",
-    "fighting": "Lucha",     "poison": "Veneno",   "ground": "Tierra",
-    "flying": "Volador",     "psychic": "Psiquico","bug": "Bicho",
-    "rock": "Roca",          "ghost": "Fantasma",  "dragon": "Dragon",
-    "dark": "Siniestro",     "steel": "Acero",     "fairy": "Hada",
-}
-GEN_MAP = {
-    "generation-i": "Gen I",     "generation-ii": "Gen II",
-    "generation-iii": "Gen III", "generation-iv": "Gen IV",
-    "generation-v": "Gen V",     "generation-vi": "Gen VI",
-    "generation-vii": "Gen VII", "generation-viii": "Gen VIII",
-    "generation-ix": "Gen IX",
-}
-GEN_ORDER = ["Gen I","Gen II","Gen III","Gen IV","Gen V",
-             "Gen VI","Gen VII","Gen VIII","Gen IX"]
-STAT_COLS = ["hp","attack","defense","special-attack","special-defense","speed"]
+from data import (
+    TYPE_COLORS, TYPE_ES, GEN_ORDER,
+    STAT_COLS, load_data,
+)
 
-# ── Carga de datos ────────────────────────────────────────────────────────
-@st.cache_data
-def load_data():
-    """Carga y une todas las tablas necesarias. @st.cache_data evita releer en cada interacción."""
-    db = next(
-        (p / "data" / "pokemon.db"
-         for p in [Path.cwd(), *Path.cwd().parents]
-         if (p / "data" / "pokemon.db").exists()),
-        None,
-    )
-    if db is None:
-        st.error("No se encontró data/pokemon.db. Ejecuta: python scripts/build_db.py")
-        st.stop()
-
-    con = sqlite3.connect(db)
-
-    pokemon = pd.read_sql("SELECT * FROM pokemon", con)
-    stats_l = pd.read_sql("SELECT * FROM pokemon_stats", con)
-    species = pd.read_sql("SELECT * FROM species", con)
-    tipos_db = pd.read_sql("SELECT * FROM pokemon_types", con)
-    con.close()
-
-    stats = (stats_l
-             .pivot(index="pokemon_id", columns="stat_name", values="base_value")
-             .reset_index())
-    stats.columns.name = None
-
-    tipo1 = (tipos_db[tipos_db["slot"] == 1][["pokemon_id", "type_name"]]
-             .rename(columns={"type_name": "type1"}))
-    tipo2 = (tipos_db[tipos_db["slot"] == 2][["pokemon_id", "type_name"]]
-             .rename(columns={"type_name": "type2"}))
-
-    df = (pokemon
-          .merge(stats, left_on="id", right_on="pokemon_id", how="left").drop(columns="pokemon_id")
-          .merge(tipo1, left_on="id", right_on="pokemon_id", how="left").drop(columns="pokemon_id")
-          .merge(tipo2, left_on="id", right_on="pokemon_id", how="left").drop(columns="pokemon_id")
-          .merge(species[["id","is_legendary","is_mythical","generation",
-                           "capture_rate","base_happiness"]], on="id", how="left"))
-
-    df["bst"] = df[STAT_COLS].sum(axis=1)
-    df["categoria"] = "Normal"
-    df.loc[df["is_legendary"] == 1, "categoria"] = "Legendario"
-    df.loc[df["is_mythical"]  == 1, "categoria"] = "Mitico"
-    df["dual_tipo"] = df["type2"].notna()
-    df["height_m"]  = df["height"] / 10
-    df["weight_kg"] = df["weight"] / 10
-    df["gen"] = df["generation"].map(GEN_MAP).fillna(df["generation"])
-    df["is_form"] = df["id"] >= 10000
-
-    return df
-
-
-# ── Layout principal ──────────────────────────────────────────────────────
-st.set_page_config(page_title="Pokemon Explorer", page_icon="", layout="wide")
+st.set_page_config(
+    page_title="Pokemon Explorer",
+    page_icon="",
+    layout="wide",
+)
 st.title("Pokémon Data Explorer")
-st.caption("Dashboard maqueta — datos de PokéAPI vía SQLite")
+st.caption(
+    "Datos de PokéAPI — SQLite. "
+    "Usa el menú del sidebar para navegar: Comparador, Ficha, Análisis, Cobertura, Clusters."
+)
 
 df_all = load_data()
 
-# ── Sidebar: filtros ──────────────────────────────────────────────────────
+# ── Sidebar: filtros de la vista general ─────────────────────────────────
 with st.sidebar:
     st.header("Filtros")
 
@@ -105,7 +37,7 @@ with st.sidebar:
         "Incluir formas alternativas",
         value=False,
         help="Las 325 formas (mega, regional, gmax…) usan id ≥ 10 000. "
-             "Desmarca para trabajar solo con los 1 025 Pokémon del Pokédex nacional.",
+             "Desmarca para trabajar solo con los 1 025 del Pokédex nacional.",
     )
 
     gens_disponibles = [g for g in GEN_ORDER if g in df_all["gen"].values]
@@ -138,20 +70,21 @@ if cat_sel:
 
 # ── KPIs ──────────────────────────────────────────────────────────────────
 col1, col2, col3, col4 = st.columns(4)
-col1.metric("Pokémon", len(df))
-col2.metric("BST medio", f"{df['bst'].mean():.0f}" if len(df) else "—")
-col3.metric("Legendarios + Míticos",
-            int((df["categoria"] != "Normal").sum()))
-col4.metric("Dual-tipo",
-            f"{df['dual_tipo'].sum()} ({df['dual_tipo'].mean()*100:.0f}%)" if len(df) else "—")
+col1.metric("Pokémon",              len(df))
+col2.metric("BST medio",            f"{df['bst'].mean():.0f}" if len(df) else "—")
+col3.metric("Legendarios + Míticos", int((df["categoria"] != "Normal").sum()))
+col4.metric(
+    "Dual-tipo",
+    f"{df['dual_tipo'].sum()} ({df['dual_tipo'].mean()*100:.0f}%)" if len(df) else "—",
+)
 
 st.divider()
 
-# ── Gráficas ──────────────────────────────────────────────────────────────
 if df.empty:
     st.warning("Ningún Pokémon coincide con los filtros actuales.")
     st.stop()
 
+# ── Gráficas ──────────────────────────────────────────────────────────────
 tab1, tab2, tab3 = st.tabs(["Tipos", "Peso & Altura", "BST por Generación"])
 
 with tab1:
@@ -198,7 +131,6 @@ with tab3:
         fig3 = px.line(
             sg.reset_index(), x="gen", y="media",
             markers=True,
-            error_y=None,
             labels={"gen": "Generación", "media": "BST medio"},
             title="BST medio por generación",
             template="plotly_dark",
