@@ -1,7 +1,7 @@
 # Datos descargados y archivos generados
 data/
 
-# Carpeta personal de explicaciones (privada, no se versiona)
+# Carpeta personal de explicaciones (privada)
 explain/
 
 # Python
@@ -20,7 +20,18 @@ env/
 .env
 *.env
 
+# Streamlit
+.streamlit/secrets.toml
+
 # MongoDB
 mongod.lock
 /mongodb-data/
 /mongo-data/
+
+# Sistemas operativos
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
