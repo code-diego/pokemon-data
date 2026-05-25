@@ -47,15 +47,24 @@ def type_badge_html(type_en: str, size: str = "13px") -> str:
 
 
 # ── Localización de la BD ─────────────────────────────────────────────────
+# Raíz del proyecto = carpeta padre de dashboard/
+_PROJECT_ROOT = Path(__file__).parent.parent
+
+
 def _find_db() -> tuple[Path | None, bool]:
-    """Busca primero pokemon.db (completa), luego sample.db. Retorna (path, is_sample)."""
+    """Busca primero pokemon.db (completa), luego sample.db. Retorna (path, is_sample).
+    Usa __file__ como ancla para funcionar en Streamlit Cloud y en local."""
+    # 1. Buscar relativo a la raíz del proyecto (fiable en cualquier entorno)
+    for name, is_sample in [("pokemon.db", False), ("sample.db", True)]:
+        candidate = _PROJECT_ROOT / "data" / name
+        if candidate.exists():
+            return candidate, is_sample
+    # 2. Fallback: subir desde cwd (útil si se ejecuta desde un subdirectorio)
     for p in [Path.cwd(), *Path.cwd().parents]:
-        full = p / "data" / "pokemon.db"
-        if full.exists():
-            return full, False
-        sample = p / "data" / "sample.db"
-        if sample.exists():
-            return sample, True
+        if (p / "data" / "pokemon.db").exists():
+            return p / "data" / "pokemon.db", False
+        if (p / "data" / "sample.db").exists():
+            return p / "data" / "sample.db", True
     return None, False
 
 
@@ -72,7 +81,12 @@ def load_data() -> pd.DataFrame:
     """Carga y une todas las tablas. @st.cache_data evita releer en cada interacción."""
     db = find_db()
     if db is None:
-        st.error("No se encontró data/pokemon.db. Ejecuta: python scripts/build_db.py")
+        st.error(
+            "No se encontró ninguna base de datos. "
+            "**Local:** ejecuta `python scripts/build_db.py`. "
+            "**Deploy:** asegúrate de que `data/sample.db` está commiteado en el repo "
+            "(genera con `python scripts/build_sample_db.py` y haz `git add data/sample.db`)."
+        )
         st.stop()
 
     con = sqlite3.connect(db)

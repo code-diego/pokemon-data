@@ -4,13 +4,12 @@
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.x-FF4B4B?logo=streamlit&logoColor=white)
 ![SQLite](https://img.shields.io/badge/SQLite-3-lightgrey?logo=sqlite)
 ![scikit-learn](https://img.shields.io/badge/scikit--learn-ML-F7931E?logo=scikit-learn&logoColor=white)
-[![Live Demo](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io)
 
 Pipeline ETL que descarga todos los datos de [PokéAPI](https://pokeapi.co) y los carga en
 SQLite. Incluye un **dashboard Streamlit multipágina** interactivo, notebooks de análisis
 exploratorio con Plotly y un workflow de **machine learning** (clustering K-means, en desarrollo).
 
-> **Demo en vivo:** [share.streamlit.io](https://share.streamlit.io).
+> **Demo en vivo:** [dashboard](https://code-diego-pokemon-data.streamlit.app/).
 
 ## Screenshots
 
