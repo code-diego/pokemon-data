@@ -1,8 +1,25 @@
 # pokemon-data
 
+![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-1.x-FF4B4B?logo=streamlit&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-3-lightgrey?logo=sqlite)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-ML-F7931E?logo=scikit-learn&logoColor=white)
+[![Live Demo](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io)
+
 Pipeline ETL que descarga todos los datos de [PokéAPI](https://pokeapi.co) y los carga en
 SQLite. Incluye un **dashboard Streamlit multipágina** interactivo, notebooks de análisis
-exploratorio con Plotly y un workflow de **machine learning** (clustering K-means).
+exploratorio con Plotly y un workflow de **machine learning** (clustering K-means, en desarrollo).
+
+> **Demo en vivo:** actualiza el badge de arriba con la URL de Streamlit Community Cloud
+> una vez que conectes el repo en [share.streamlit.io](https://share.streamlit.io).
+
+## Screenshots
+
+| Vista general | Pokédex | Cobertura de tipos |
+|:---:|:---:|:---:|
+| ![main](docs/screenshots/main.png) | ![pokedex](docs/screenshots/pokedex.png) | ![cobertura](docs/screenshots/cobertura.png) |
+
+> Las capturas se añaden en `docs/screenshots/` — ver [guía](docs/screenshots/README.md).
 
 ## Página principal (Dashboard)
 
@@ -18,13 +35,14 @@ streamlit run dashboard/App.py
 
 Se abre en `http://localhost:8501`. Todas las páginas están en el menú lateral:
 
-| Página | Descripción |
-|--------|-------------|
-| **Vista general** | Filtros por generación, tipo y categoría — KPIs, distribución de tipos, scatter peso/altura, BST por generación, tabla filtrada |
-| **Comparador** | Selecciona 2–6 Pokémon: sprites lado a lado, radar de stats superpuesto, tabla comparativa con máximos resaltados |
-| **Pokédex** | Busca cualquier Pokémon: sprite, número, tipos, métricas (BST, captura, felicidad…), stats con barra y debilidades/resistencias agrupadas (×4 / ×2 / ×½ / ×¼ / ×0) |
-| **Análisis estadístico** | Mapa de calor de correlaciones, distribuciones por categoría, violín + test Mann-Whitney (legendarios vs normales) |
-| **Cobertura de tipos** | Modo defensivo (¿qué te golpea y cómo?) · Modo ofensivo (¿qué tipos cubre tu equipo?) |
+| Página | Para qué sirve | Qué incluye |
+|--------|---------------|-------------|
+| **Vista general** | Explorar el Pokédex completo con filtros combinados. Ideal para comparar generaciones o ver qué tan raro es un tipo. | KPIs (total, legendarios, dual-tipo), gráfica de distribución de tipos, scatter peso/altura con BST como tamaño de burbuja, tabla filtrable. Los filtros del sidebar afectan todas las vistas. |
+| **Comparador** | Poner cara a cara 2–6 Pokémon y ver en qué stats destaca cada uno. Útil para elegir un equipo o entender diferencias de diseño entre generaciones. | Tarjetas con sprite y color del tipo, radar de stats superpuesto, barra horizontal de BST, tabla con máximos resaltados. Los chips del selector se colorean según el tipo del Pokémon. |
+| **Pokédex** | Consultar la ficha completa de cualquier Pokémon: sus stats, cómo le afecta cada tipo de ataque y sus métricas de juego. | Sprite, badges de tipo, stats en barra horizontal, tabla de debilidades/resistencias agrupada por multiplicador (×4 / ×2 / ×½ / ×¼ / ×0 / ×1). |
+| **Análisis estadístico** | Responder preguntas estadísticas: ¿qué stats correlacionan? ¿son los legendarios realmente más fuertes? ¿qué tipo tiene mayor BST mediano? | Heatmap de correlaciones Pearson, histogramas por categoría, violín + **test Mann-Whitney U** (legendarios vs normales), boxplot de BST por tipo con top/bottom 10 y tabla comparativa. |
+| **Cobertura de tipos** | Calcular puntos débiles de un Pokémon o detectar huecos de cobertura en un equipo ofensivo. Práctico para construir equipos. | **Modo defensivo** — selecciona 1–2 tipos y ve qué te golpea con ×4/×2/×½/×0. **Modo ofensivo** — selecciona hasta 4 tipos de ataque y ve qué tipos defensivos quedas sin cubrir. Botones coloreados por tipo. |
+| **Acerca del proyecto** | Entender el stack técnico, el volumen de datos y cómo está construido el pipeline. Útil para revisores o reclutadores. | Stack completo, métricas del dataset, diagrama del pipeline ETL e instrucciones de instalación. |
 
 
 ## Estructura
@@ -32,33 +50,38 @@ Se abre en `http://localhost:8501`. Todas las páginas están en el menú latera
 ```
 pokemon-data/
 ├── scripts/
-│   ├── fetch.py          # descarga datos de PokéAPI → data/raw/
-│   ├── build_db.py       # construye pokemon.db (SQLite, 9 tablas relacionadas)
-│   └── build_nosql.py    # construye json → data/pokemon_docs.json (MongoDB)
+│   ├── fetch.py              # descarga datos de PokéAPI → data/raw/
+│   ├── build_db.py           # construye pokemon.db (SQLite, 9 tablas)
+│   ├── build_sample_db.py    # genera data/sample.db (gen I–III, para deploy)
+│   └── build_nosql.py        # construye pokemon_docs.json + carga MongoDB
 ├── notebooks/
-│   ├── relational.ipynb  # análisis exploratorio en SQLite (Plotly — hover, zoom)
-│   ├── clustering.ipynb  # clustering K-means + PCA — en progreso *
-│   └── nosql.ipynb       # consultas en MongoDB
+│   ├── relational.ipynb      # análisis exploratorio SQLite · Plotly
+│   ├── clustering.ipynb      # clustering K-means + PCA ⚠️ en desarrollo
+│   └── nosql.ipynb           # consultas documentales en MongoDB
 ├── dashboard/
-│   ├── app.py            # página principal —  (filtros, KPIs, gráficas)
-│   ├── data.py           # módulo compartido: carga cacheada, type-chart, helpers
+│   ├── App.py                # página principal (filtros, KPIs, gráficas)
+│   ├── data.py               # módulo compartido: carga cacheada, type-chart, helpers
 │   └── pages/
-│       ├── 1_Comparador.py           # stats para 2-6 Pokémon
-│       ├── 2_Pokedex.py             
-│       ├── 3_Analisis_estadistico.py # test Mann-Whitney
-│       └── 4_Cobertura_de_tipos.py   # calculadora defensiva/ofensiva de tipos
+│       ├── 1_Comparador.py           # comparador de stats para 2–6 Pokémon
+│       ├── 2_Pokedex.py              # ficha individual con debilidades
+│       ├── 3_Analisis_estadistico.py # correlaciones, Mann-Whitney, BST por tipo
+│       ├── 4_Cobertura_de_tipos.py   # calculadora defensiva/ofensiva
+│       └── 5_Acerca_del_proyecto.py  # stack técnico y pipeline
 ├── docs/
-│   └── MONGO_GUIDE.md    # guía de instalación de MongoDB 
+│   ├── screenshots/          # capturas del dashboard (ver guía en su README.md)
+│   └── MONGO_GUIDE.md        # guía de instalación de MongoDB
 ├── requirements.txt
-└── data/                 # archivos generados —  .gitignore
-    ├── raw/              # caché JSON por fetch.py
-    │   ├── pokemon/      # 1,350 archivos 
-    │   ├── species/      # 1,025 archivos 
-    │   ├── types/        #    21 archivos 
-    │   ├── abilities/    #   371 archivos 
-    │   └── moves/        #   937 archivos
-    ├── pokemon.db        # Base de datos SQLite (build_db.py)
-    └── pokemon_docs.json # Respaldo JSON para MongoDB (build_nosql.py)
+├── requirements-nosql.txt    # pymongo (opcional, solo para MongoDB)
+└── data/                     # archivos generados — .gitignore
+    ├── sample.db             # BD reducida committeable (build_sample_db.py)
+    ├── raw/                  # caché JSON por fetch.py
+    │   ├── pokemon/          # 1,350 archivos
+    │   ├── species/          # 1,025 archivos
+    │   ├── types/            #    21 archivos
+    │   ├── abilities/        #   371 archivos
+    │   └── moves/            #   937 archivos
+    ├── pokemon.db            # BD SQLite completa (build_db.py)
+    └── pokemon_docs.json     # respaldo JSON para MongoDB
 ```
 
 ## Requisitos
@@ -75,8 +98,9 @@ pip install -r requirements.txt
 | `numpy`        | Cálculos numéricos |
 | `plotly`       | Gráficas interactivas (hover, zoom) en notebooks y dashboard |
 | `streamlit`    | Dashboard multipágina |
-| `scikit-learn` | K-means, PCA, StandardScaler — clustering ML (arrastra scipy) |
-| `pymongo`      | Conexión con MongoDB *(solo para el backend NoSQL opcional)* |
+| `scikit-learn` | K-means, PCA, StandardScaler — clustering ML (incluye scipy) |
+
+MongoDB opcional → `pip install -r requirements-nosql.txt`
 
 ---
 
@@ -103,7 +127,10 @@ Requiere `data/pokemon.db` (`build_db.py`).
 | 7 | Combinaciones de tipos — ranking de pares + matriz simétrica |
 | 8 | Consultas SQL personalizadas |
 
-### `clustering.ipynb` — Machine Learning (scikit-learn)
+### `clustering.ipynb` — Machine Learning (scikit-learn) ⚠️ en desarrollo
+
+> **⚠️ En desarrollo** — El modelo K-means (k=5) y la visualización PCA están implementados
+> y validados. La integración con el dashboard es trabajo pendiente.
 
 Requiere `data/pokemon.db` (`build_db.py`).
 
@@ -184,5 +211,5 @@ MONGO_URI="mongodb://mi-servidor:27017" python scripts/build_nosql.py
 - **Tests** — pruebas unitarias para los loaders con una muestra pequeña de JSON fijos.
 - **CI/CD** — GitHub Actions para ejecutar tests y lint en cada push.
 - **Despliegue** — publicar el dashboard en Streamlit Community Cloud con una BD de muestra versionada.
-- **Clusters en el dashboard** — página interactiva de K-means una vez validado el modelo en el notebook.
+- **Clusters en el dashboard** *(pendiente activo)* — página interactiva de K-means; modelo ya validado en el notebook, integración con Streamlit pendiente.
 - **Actualización incremental** — `build_db.py` reconstruye la BD completa; se puede hacer incremental.

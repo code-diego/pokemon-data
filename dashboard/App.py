@@ -13,6 +13,7 @@ import streamlit as st
 from data import (
     TYPE_COLORS, TYPE_ES, GEN_ORDER,
     STAT_COLS, load_data, pokemon_display_name,
+    IS_SAMPLE_DB,
 )
 
 st.set_page_config(page_title="Pokemon Explorer", page_icon="", layout="wide")
@@ -21,6 +22,13 @@ st.caption(
     "Datos de PokéAPI — SQLite. "
     "Usa el menú del sidebar para navegar: Comparador, Pokédex, Análisis, Cobertura de tipos."
 )
+
+if IS_SAMPLE_DB:
+    st.info(
+        "ℹ️ **Modo demostración** — mostrando datos de muestra (generaciones I–III, ~150 Pokémon). "
+        "Para los 1 025 Pokémon completos, clona el repo y ejecuta "
+        "`python scripts/fetch.py && python scripts/build_db.py`."
+    )
 
 df_all = load_data()
 
@@ -56,29 +64,18 @@ if cat_sel:
     df = df[df["categoria"].isin(cat_sel)]
 
 # ── KPIs ──────────────────────────────────────────────────────────────────
-col1, col2, col3, col4 = st.columns(4)
+col1, col2, col3 = st.columns(3)
 col1.metric("Pokémon", len(df))
 col2.metric(
-    "BST medio",
-    f"{df['bst'].mean():.0f}" if len(df) else "—",
-    help="Base Stat Total — suma de HP, Ataque, Defensa, Atq. Esp., Def. Esp. y Velocidad. "
-         "Indica el poder general del Pokémon. Media global: 427, rango: 175–720.",
-)
-col3.metric(
     "Legendarios + Míticos",
     int((df["categoria"] != "Normal").sum()),
-    help="Pokémon de captura especial o no disponibles en la historia principal. "
-         "Suelen tener BST muy alto (>580).",
+    help="Pokémon de captura especial o no disponibles en la historia principal.",
 )
-col4.metric(
+col3.metric(
     "Dual-tipo",
     f"{df['dual_tipo'].sum()} ({df['dual_tipo'].mean()*100:.0f}%)" if len(df) else "—",
     help="Pokémon con dos tipos asignados — tienen interacciones de daño más complejas "
          "y pueden acumular debilidades o resistencias.",
-)
-st.caption(
-    "**BST global:** media 427 · mediana 450 · "
-    "mín. 175 (Shedinja) · máx. 720 (Eternatus Eternamax)"
 )
 st.divider()
 
@@ -87,7 +84,7 @@ if df.empty:
     st.stop()
 
 # ── Gráficas ──────────────────────────────────────────────────────────────
-tab1, tab2, tab3 = st.tabs(["Tipos", "Peso & Altura", "BST por Generación"])
+tab1, tab2 = st.tabs(["Tipos", "Peso & Altura"])
 
 with tab1:
     counts = (df["type1"].value_counts()
@@ -124,31 +121,6 @@ with tab2:
     fig2.update_layout(legend_title_text="Tipo primario", height=540)
     st.plotly_chart(fig2, use_container_width=True)
 
-with tab3:
-    df_g = df[df["gen"].isin(GEN_ORDER)].copy()
-    if not df_g.empty:
-        sg = (df_g.groupby("gen")["bst"]
-              .agg(media="mean", mediana="median", n="count")
-              .reindex(GEN_ORDER).dropna())
-        fig3 = px.line(
-            sg.reset_index(), x="gen", y="media",
-            markers=True,
-            labels={"gen": "Generación", "media": "BST medio"},
-            title="BST medio por generación",
-            template="plotly_dark",
-        )
-        fig3.add_scatter(x=sg.index, y=sg["mediana"],
-                         mode="lines+markers", name="Mediana BST",
-                         line=dict(dash="dash", color="#87ceeb"))
-        for gen, row in sg.iterrows():
-            fig3.add_annotation(x=gen, y=row["media"],
-                                text=f"n={int(row['n'])}",
-                                showarrow=False, yshift=14,
-                                font=dict(size=9, color="#aaa"))
-        fig3.update_layout(height=420)
-        st.plotly_chart(fig3, use_container_width=True)
-    else:
-        st.info("Sin datos de generación para los filtros actuales.")
 
 # ── Tabla filtrada ────────────────────────────────────────────────────────
 st.divider()

@@ -10,7 +10,7 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from data import load_data, STAT_COLS, STAT_LABELS
+from data import load_data, STAT_COLS, STAT_LABELS, TYPE_COLORS, TYPE_ES, pokemon_display_name
 
 st.set_page_config(page_title="Análisis Estadístico", layout="wide")
 st.title("Análisis Estadístico")
@@ -19,7 +19,7 @@ st.caption("Solo formas base (1 025 Pokémon, id < 10 000).")
 df_all = load_data()
 df     = df_all[df_all["id"] < 10000].copy()
 
-tab1, tab2, tab3 = st.tabs(["Correlaciones", "Distribuciones", "Comparación de grupos"])
+tab1, tab2, tab3, tab4 = st.tabs(["Correlaciones", "Distribuciones", "Comparación de grupos", "BST por tipo"])
 
 # ── Correlaciones ─────────────────────────────────────────────────────────
 with tab1:
@@ -46,7 +46,7 @@ with tab1:
 
     # Insight automático: par de stats más y menos correlacionados
     stat_corr = corr.loc[STAT_LABELS, STAT_LABELS].copy()
-    np.fill_diagonal(stat_corr.values, np.nan)
+    stat_corr = stat_corr.where(~np.eye(stat_corr.shape[0], dtype=bool))
     upper = stat_corr.where(np.triu(np.ones(stat_corr.shape, dtype=bool), k=1))
     flat  = upper.stack()
     if len(flat) >= 2:
@@ -169,3 +169,108 @@ with tab3:
 
     except ImportError:
         st.info("Instala scikit-learn/scipy para el test estadístico: `pip install scikit-learn`")
+
+# ── BST por tipo ──────────────────────────────────────────────────────────
+with tab4:
+    st.subheader("BST por tipo primario")
+    st.markdown(
+        "El **BST** (Base Stat Total) es la suma de los 6 stats base de un Pokémon: "
+        "HP, Ataque, Defensa, Atq. Esp., Def. Esp. y Velocidad. "
+        "Es el indicador más directo del poder general de un Pokémon — "
+        "a mayor BST, más flexible y potente en combate. "
+        "El boxplot muestra cómo se distribuye el BST dentro de cada tipo primario."
+    )
+
+    order = (
+        df.groupby("type1")["bst"]
+        .median()
+        .sort_values(ascending=False)
+        .index.tolist()
+    )
+    tick_labels = [TYPE_ES.get(t, t) for t in order]
+
+    fig4 = px.box(
+        df, x="type1", y="bst",
+        color="type1",
+        category_orders={"type1": order},
+        color_discrete_map=TYPE_COLORS,
+        hover_name="name",
+        labels={"type1": "Tipo", "bst": "BST", "name": "Pokémon"},
+        title="Distribución de BST por tipo primario (hover = nombre del Pokémon)",
+        template="plotly_dark",
+    )
+    fig4.update_layout(
+        showlegend=False,
+        height=500,
+        xaxis=dict(title="", ticktext=tick_labels, tickvals=order),
+        margin=dict(b=80),
+    )
+    st.plotly_chart(fig4, use_container_width=True)
+
+    medians_type = df.groupby("type1")["bst"].median()
+    top_type = TYPE_ES.get(medians_type.idxmax(), medians_type.idxmax())
+    bot_type = TYPE_ES.get(medians_type.idxmin(), medians_type.idxmin())
+    st.caption(
+        f"💡 Tipo con BST mediano más alto: **{top_type}** ({medians_type.max():.0f}) · "
+        f"más bajo: **{bot_type}** ({medians_type.min():.0f}) — "
+        "Los tipos Dragon y Acero tienden a tener Pokémon pseudo-legendarios y legendarios, "
+        "lo que eleva su mediana."
+    )
+
+    st.divider()
+
+    # ── Ranking top 10 por BST ─────────────────────────────────────────────
+    col_top, col_bot = st.columns(2)
+
+    with col_top:
+        st.markdown("**Top 10 — mayor BST**")
+        top10 = (
+            df.nlargest(10, "bst")[["name", "type1", "type2", "bst", "categoria"]]
+            .copy()
+        )
+        top10["Pokémon"]   = top10["name"].apply(pokemon_display_name)
+        top10["Tipo"]      = top10["type1"].map(lambda t: TYPE_ES.get(t, t))
+        top10["Categoría"] = top10["categoria"]
+        st.dataframe(
+            top10[["Pokémon", "Tipo", "bst", "Categoría"]]
+            .rename(columns={"bst": "BST"})
+            .set_index("Pokémon"),
+            use_container_width=True,
+        )
+
+    with col_bot:
+        st.markdown("**Top 10 — menor BST**")
+        bot10 = (
+            df.nsmallest(10, "bst")[["name", "type1", "bst", "gen"]]
+            .copy()
+        )
+        bot10["Pokémon"] = bot10["name"].apply(pokemon_display_name)
+        bot10["Tipo"]    = bot10["type1"].map(lambda t: TYPE_ES.get(t, t))
+        bot10["Gen"]     = bot10["gen"]
+        st.dataframe(
+            bot10[["Pokémon", "Tipo", "bst", "Gen"]]
+            .rename(columns={"bst": "BST"})
+            .set_index("Pokémon"),
+            use_container_width=True,
+        )
+
+    st.divider()
+
+    # ── Tabla completa por tipo ────────────────────────────────────────────
+    st.markdown("**Estadísticas de BST por tipo primario**")
+    tbl_stats = (
+        df.groupby("type1")["bst"]
+        .agg(Mediana="median", Media="mean", Máximo="max", N="count")
+        .sort_values("Mediana", ascending=False)
+        .reset_index()
+        .rename(columns={"type1": "Tipo"})
+    )
+    tbl_stats["Tipo"]    = tbl_stats["Tipo"].map(lambda t: TYPE_ES.get(t, t))
+    tbl_stats["Mediana"] = tbl_stats["Mediana"].round(0).astype(int)
+    tbl_stats["Media"]   = tbl_stats["Media"].round(1)
+    tbl_stats["Máximo"]  = tbl_stats["Máximo"].astype(int)
+    st.dataframe(tbl_stats.set_index("Tipo"), use_container_width=True)
+    st.caption(
+        "La mediana es más robusta que la media cuando hay valores extremos "
+        "(legendarios con BST muy alto pueden sesgar la media hacia arriba)."
+    )

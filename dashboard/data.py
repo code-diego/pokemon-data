@@ -1,7 +1,3 @@
-"""
-Módulo compartido: constantes, carga de datos cacheada y helpers.
-Importado por app.py y todas las páginas en dashboard/pages/.
-"""
 import sqlite3
 from pathlib import Path
 
@@ -51,12 +47,23 @@ def type_badge_html(type_en: str, size: str = "13px") -> str:
 
 
 # ── Localización de la BD ─────────────────────────────────────────────────
-def find_db() -> Path | None:
+def _find_db() -> tuple[Path | None, bool]:
+    """Busca primero pokemon.db (completa), luego sample.db. Retorna (path, is_sample)."""
     for p in [Path.cwd(), *Path.cwd().parents]:
-        candidate = p / "data" / "pokemon.db"
-        if candidate.exists():
-            return candidate
-    return None
+        full = p / "data" / "pokemon.db"
+        if full.exists():
+            return full, False
+        sample = p / "data" / "sample.db"
+        if sample.exists():
+            return sample, True
+    return None, False
+
+
+_DB_PATH, IS_SAMPLE_DB = _find_db()
+
+
+def find_db() -> Path | None:
+    return _DB_PATH
 
 
 # ── Carga principal ───────────────────────────────────────────────────────

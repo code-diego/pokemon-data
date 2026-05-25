@@ -1,5 +1,6 @@
 # Datos descargados y archivos generados
 data/
+!data/sample.db
 
 # Carpeta personal de explicaciones (privada)
 explain/

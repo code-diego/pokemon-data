@@ -18,6 +18,24 @@ from data import (
 st.set_page_config(page_title="Cobertura de Tipos", layout="wide")
 st.title("Cobertura y Efectividad de Tipos")
 
+
+def _inject_type_button_css() -> None:
+    css = []
+    for t_en, color in TYPE_COLORS.items():
+        t_es = TYPE_ES.get(t_en, t_en)
+        css.append(
+            f'button[aria-label="{t_es}"][data-testid="baseButton-secondary"]'
+            f'{{border:2px solid {color}!important;color:{color}!important;}}'
+        )
+        css.append(
+            f'button[aria-label="{t_es}"][data-testid="baseButton-primary"]'
+            f'{{background:{color}!important;border-color:{color}!important;color:#fff!important;}}'
+        )
+    st.markdown(f"<style>{''.join(css)}</style>", unsafe_allow_html=True)
+
+
+_inject_type_button_css()
+
 # ── Estado inicial ────────────────────────────────────────────────────────
 if "cob_def" not in st.session_state:
     st.session_state.cob_def = ["normal"]

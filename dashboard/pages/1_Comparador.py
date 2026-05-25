@@ -31,6 +31,20 @@ seleccion = st.multiselect(
     max_selections=6,
 )
 
+# Colorear cada chip del multiselect con el color del tipo del Pokémon seleccionado
+if seleccion:
+    chip_css = []
+    for i, name in enumerate(seleccion):
+        row_m = df[df["name"] == name]
+        if not row_m.empty:
+            color = TYPE_COLORS.get(row_m.iloc[0]["type1"], "#888888")
+            chip_css.append(
+                f'[data-baseweb="tag"]:nth-child({i + 1})'
+                f'{{background:{color}bb!important;border:1px solid {color}!important;color:#fff!important;}}'
+            )
+    if chip_css:
+        st.markdown(f"<style>{''.join(chip_css)}</style>", unsafe_allow_html=True)
+
 if len(seleccion) < 2:
     st.info("Selecciona al menos 2 Pokémon para comparar.")
     st.stop()

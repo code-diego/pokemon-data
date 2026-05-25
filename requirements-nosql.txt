@@ -1,0 +1,4 @@
+# Dependencias opcionales para el backend MongoDB
+# Instalar solo si se usa nosql.ipynb o build_nosql.py:
+#   pip install -r requirements-nosql.txt
+pymongo>=4.6
