@@ -1,5 +1,5 @@
 """
-Dashboard Pokémon — Vista general
+dashboard Pokémon — Vista general
 > streamlit run dashboard/App.py
 """
 import sys

@@ -1,5 +1,5 @@
 """
-Pokédex — Ficha individual: sprite, tipos, estadísticas y efectividad de tipos.
+pokédex — Ficha individual: sprite, tipos, estadísticas y efectividad de tipos.
 """
 import sys
 from pathlib import Path

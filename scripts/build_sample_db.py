@@ -1,11 +1,9 @@
 """
-Genera data/sample.db — base de datos reducida (generaciones I–III, ~150 Pokémon).
-Útil para el deploy en Streamlit Community Cloud sin necesidad del ETL completo.
+genera data/sample.db — base de datos reducida (generaciones I–III, ~150 Pokémon).
+para el deploy en Streamlit Community Cloud sin necesidad del ETL completo.
 
-Uso:
-    python scripts/build_sample_db.py
-
-Requiere que data/pokemon.db exista (ejecutar build_db.py primero).
+>python scripts/build_sample_db.py
+* requiere que data/pokemon.db exista (ejecutar build_db.py primero).
 """
 import sqlite3
 import sys

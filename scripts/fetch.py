@@ -1,5 +1,5 @@
 """
-Descarga todos los datos de PokéAPI y los guarda como JSON en data/raw/.
+descarga todos los datos de PokéAPI y los guarda como JSON en data/raw/.
 > python3 scripts/fetch.py
 * salta archivos que ya existen
 """

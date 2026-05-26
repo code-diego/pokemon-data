@@ -1,5 +1,5 @@
 """
-Comparador de Pokémon — tarjetas visuales, radar de stats y BST comparado.
+comparador de Pokémon — tarjetas visuales, radar de stats y BST comparado.
 """
 import sys
 from pathlib import Path

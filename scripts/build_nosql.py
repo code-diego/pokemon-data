@@ -1,5 +1,5 @@
 """
-Lee la caché JSON de data/raw/ y produce:
+lee la caché JSON de data/raw/ y produce:
   1. data/pokemon_docs.json  — respaldo JSON local
   2. MongoDB pokemon_data.pokemon  — documentos desnormalizados listos para consultas
 

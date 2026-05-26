@@ -1,5 +1,5 @@
 """
-Lee el JSON de data/raw/ y construye data/pokemon.db (SQLite).
+lee el JSON de data/raw/ y construye data/pokemon.db (SQLite).
 > python scripts/build_db.py
 * requiere haber ejecutado scripts/fetch.py primero.
 """

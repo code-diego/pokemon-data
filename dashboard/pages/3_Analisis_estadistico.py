@@ -1,5 +1,5 @@
 """
-Análisis estadístico: correlaciones, distribuciones y comparación de grupos.
+análisis estadístico: correlaciones, distribuciones y comparación de grupos.
 """
 import sys
 from pathlib import Path

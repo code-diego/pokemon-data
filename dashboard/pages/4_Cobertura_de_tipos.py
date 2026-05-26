@@ -1,5 +1,5 @@
 """
-Calculadora de cobertura/efectividad de tipos.
+calculadora de cobertura/efectividad de tipos.
 Modo defensivo: qué te golpea y cómo.
 Modo ofensivo: qué cubres con tu equipo de tipos.
 """

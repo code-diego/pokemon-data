@@ -1,5 +1,5 @@
 """
-Acerca del proyecto — stack técnico, volumen de datos y pipeline.
+acerca del proyecto — stack técnico, volumen de datos y pipeline.
 """
 import sys
 from pathlib import Path
